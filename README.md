@@ -1,8 +1,17 @@
 # Constellation
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0### Project Status
 
-Constellation is an open-source Configuration Management Database (CMDB) built for modern infrastructure management. It provides a graph-based approach to track and visualize all your organization's assets - from hardware and software to people, processes, and policies.
+| Component | Status | Description |
+|-----------|--------|-------------|
+| 🗄️ **Data Models** | ✅ Complete | Pydantic models for CI, Human, Governance assets |
+| 🐳 **Docker Infrastructure** | ✅ Complete | Neo4j + FastAPI + development environment |
+| 🔌 **Neo4j Integration** | ✅ Complete | Database connection with pooling and lifecycle management |
+| 📋 **CRUD API** | ✅ Complete | Full Configuration Items endpoints with validation |
+| 🔍 **Search & Filtering** | ✅ Complete | Text search and advanced filtering capabilities |
+| 📈 **Impact Analysis** | ✅ Complete | Dependencies, impact analysis, and bus factor endpoints |
+| 🎨 **Frontend** | 📋 Planned | Vue.js application with graph visualization |
+| 🔒 **Authentication** | 📋 Planned | JWT-based RBAC system |tion is an open-source Configuration Management Database (CMDB) built for modern infrastructure management. It provides a graph-based approach to track and visualize all your organization's assets - from hardware and software to people, processes, and policies.
 
 ## 🎯 Vision
 
@@ -69,7 +78,7 @@ Create a comprehensive, visual, and intuitive CMDB that goes beyond traditional 
 
 ### Available API Endpoints
 
-The API provides comprehensive Configuration Item management:
+The API provides comprehensive Configuration Item management and impact analysis:
 
 - **CRUD Operations**:
   - `POST /api/v1/cis` - Create new CI
@@ -77,6 +86,15 @@ The API provides comprehensive Configuration Item management:
   - `GET /api/v1/cis/{id}` - Get specific CI
   - `PUT /api/v1/cis/{id}` - Update CI
   - `DELETE /api/v1/cis/{id}` - Delete CI
+
+- **Impact Analysis & Relationships**:
+  - `POST /api/v1/relationships` - Create relationships between CIs
+  - `GET /api/v1/cis/{id}/relationships` - Get all relationships for a CI
+  - `DELETE /api/v1/relationships/{id}` - Delete a relationship
+  - `GET /api/v1/impact/{id}` - **Analyze impact of CI failure**
+  - `GET /api/v1/dependencies/{id}` - **Analyze CI dependencies**
+  - `GET /api/v1/busfactor` - **Identify high-risk single points of failure**
+  - `GET /api/v1/graph/stats` - Get overall CMDB statistics
 
 - **Search & Analytics**:
   - `GET /api/v1/cis/search?q=term` - Search CIs by text
@@ -86,6 +104,26 @@ The API provides comprehensive Configuration Item management:
 - **System Endpoints**:
   - `GET /health` - Health check with DB status
   - `GET /docs` - Interactive API documentation
+
+### Impact Analysis Examples
+
+**Impact Analysis**: What happens if this CI fails?
+```bash
+curl "http://localhost:8000/api/v1/impact/{ci-id}"
+# Returns: List of impacted CIs, criticality breakdown, risk score
+```
+
+**Dependency Analysis**: What does this CI depend on?
+```bash
+curl "http://localhost:8000/api/v1/dependencies/{ci-id}"
+# Returns: All dependencies with relationship chains
+```
+
+**Bus Factor Analysis**: Which CIs are critical single points of failure?
+```bash
+curl "http://localhost:8000/api/v1/busfactor"
+# Returns: CIs ranked by dependency count and criticality
+```
 
 ### Development Commands
 

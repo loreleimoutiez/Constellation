@@ -161,7 +161,7 @@ class RelationshipService:
         # If CI A depends on CI B, then A is impacted when B fails
         query = f"""
         MATCH path = (impacted:CI)-[:RELATED*1..{max_depth}]->(ci:CI {{id: $ci_id}})
-        WHERE ALL(r IN relationships(path) WHERE r.type IN ['DEPENDS_ON', 'HOSTED_ON', 'USES'])
+        WHERE ALL(r IN relationships(path) WHERE r.type IN ['DEPENDS_ON', 'RUNS_ON', 'HOSTS', 'USES'])
         RETURN impacted.id as ci_id, impacted.name as ci_name, impacted.criticality as criticality,
                length(path) as distance, 
                [r in relationships(path) | r.type] as relationship_chain
@@ -219,7 +219,7 @@ class RelationshipService:
         
         query = f"""
         MATCH path = (ci:CI {{id: $ci_id}})-[:RELATED*1..{max_depth}]->(dependency:CI)
-        WHERE ALL(r IN relationships(path) WHERE r.type IN ['DEPENDS_ON', 'HOSTED_ON', 'USES'])
+        WHERE ALL(r IN relationships(path) WHERE r.type IN ['DEPENDS_ON', 'RUNS_ON', 'HOSTS', 'USES'])
         RETURN dependency.id as ci_id, dependency.name as ci_name, dependency.criticality as criticality,
                length(path) as distance,
                [r in relationships(path) | r.type] as relationship_chain
@@ -256,7 +256,7 @@ class RelationshipService:
         
         query = """
         MATCH (ci:CI)<-[:RELATED]-(dependent:CI)
-        WHERE ANY(r IN [(ci)<-[rel:RELATED]-(dependent) | rel] WHERE r.type IN ['DEPENDS_ON', 'HOSTED_ON', 'USES'])
+        WHERE ANY(r IN [(ci)<-[rel:RELATED]-(dependent) | rel] WHERE r.type IN ['DEPENDS_ON', 'RUNS_ON', 'HOSTS', 'USES'])
         WITH ci, count(dependent) as dependency_count
         WHERE dependency_count > 0
         RETURN ci.id as ci_id, ci.name as ci_name, ci.criticality as criticality, 
