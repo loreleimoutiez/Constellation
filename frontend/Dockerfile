@@ -1,33 +1,31 @@
-# Frontend Dockerfile for Vue.js application
-FROM node:18-alpine
+# Build stage
+FROM node:20-alpine AS build
 
-# Set environment variables
-ENV NODE_ENV=development
-
-# Set work directory
 WORKDIR /app
 
-# Install dependencies
+# Copy package files
 COPY package*.json ./
-RUN npm ci --only=production
 
-# Copy project files
+# Install dependencies
+RUN npm ci --only=production --legacy-peer-deps
+
+# Copy source code
 COPY . .
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs \
-    && adduser -S nextjs -u 1001
+# Build the application
+RUN npm run build
 
-# Change ownership of the app directory
-RUN chown -R nextjs:nodejs /app
-USER nextjs
+# Production stage
+FROM nginx:alpine AS production
 
-# Expose port
-EXPOSE 3000
+# Copy built application to nginx
+COPY --from=build /app/dist /usr/share/nginx/html
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-    CMD curl -f http://localhost:3000 || exit 1
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Start the application
-CMD ["npm", "run", "dev"]
+# Expose port 80
+EXPOSE 80
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]

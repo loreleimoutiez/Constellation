@@ -1,6 +1,10 @@
 # Constellation
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0### Project Status
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
+Constellation is an open-source Configuration Management Database (CMDB) built for modern infrastructure management. It provides a graph-based approach to track and visualize all your organization's assets - from hardware and software to people, processes, and policies.
+
+### Project Status
 
 | Component | Status | Description |
 |-----------|--------|-------------|
@@ -10,8 +14,8 @@
 | 📋 **CRUD API** | ✅ Complete | Full Configuration Items endpoints with validation |
 | 🔍 **Search & Filtering** | ✅ Complete | Text search and advanced filtering capabilities |
 | 📈 **Impact Analysis** | ✅ Complete | Dependencies, impact analysis, and bus factor endpoints |
-| 🎨 **Frontend** | 📋 Planned | Vue.js application with graph visualization |
-| 🔒 **Authentication** | 📋 Planned | JWT-based RBAC system |tion is an open-source Configuration Management Database (CMDB) built for modern infrastructure management. It provides a graph-based approach to track and visualize all your organization's assets - from hardware and software to people, processes, and policies.
+| 🎨 **Frontend** | 🚧 In Progress | Vue.js application with graph visualization - basic structure complete |
+| 🔒 **Authentication** | 📋 Planned | JWT-based RBAC system |on
 
 ## 🎯 Vision
 
@@ -70,11 +74,33 @@ Create a comprehensive, visual, and intuitive CMDB that goes beyond traditional 
    ```
 
 3. **Access the services**:
+   - 🌐 **Frontend Application**: http://localhost:5173 (when using full-stack setup)
    - 📊 **Neo4j Browser**: http://localhost:7474
      - Username: `neo4j`
      - Password: `constellation123`
    - 📚 **API Documentation**: http://localhost:8000/docs
    - 🔍 **API Health Check**: http://localhost:8000/health
+
+### Frontend Development
+
+For developing the Vue.js frontend:
+
+```bash
+# Start full-stack including frontend
+make frontend-dev
+
+# Or develop frontend locally with hot reload
+cd frontend
+npm install --legacy-peer-deps
+npm run dev  # Starts on http://localhost:5173
+```
+
+**Frontend Features**:
+- 🎨 Modern Vue.js 3 + TypeScript + Tailwind CSS
+- 📊 Interactive graph visualization with vis-network
+- 🔍 Asset management interface
+- 📈 Impact analysis dashboard
+- 🎯 Responsive design with Constellation branding
 
 ### Available API Endpoints
 

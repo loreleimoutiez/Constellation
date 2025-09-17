@@ -132,6 +132,18 @@ sample-data: ## Load sample CMDB data
 # Development workflow
 dev: build up ## Quick development setup (build + up)
 
+# Frontend development
+frontend-dev: ## Start development with frontend
+	@echo "🚀 Starting full stack development (including frontend)..."
+	docker compose --profile frontend up -d
+
+frontend-build: ## Build frontend container only
+	@echo "🔧 Building frontend container..."
+	docker compose build frontend
+
+frontend-logs: ## Show frontend logs
+	docker compose logs -f frontend
+
 # Production-like setup (without development volumes)
 prod-test: ## Test production-like setup
 	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
