@@ -38,6 +38,47 @@ def sample_relationship_data():
 
 
 @pytest.fixture
+def sample_human_data():
+    """Sample human asset data for testing."""
+    return {
+        "name": "Jane Doe",
+        "employee_id": "EMP001",
+        "email": "jane.doe@company.com",
+        "display_name": "Jane",
+        "employment_status": "ACTIVE",
+        "department": "Engineering",
+        "is_manager": False,
+        "on_call_enabled": True
+    }
+
+
+@pytest.fixture
+def sample_team_data():
+    """Sample team data for testing."""
+    return {
+        "name": "DevOps Team",
+        "team_type": "DEVOPS",
+        "department": "Engineering",
+        "primary_location": "San Francisco",
+        "contact_email": "devops@company.com"
+    }
+
+
+@pytest.fixture
+def sample_role_data():
+    """Sample role data for testing."""
+    return {
+        "name": "Senior Software Engineer",
+        "role_type": "TECHNICAL",
+        "level": "Senior",
+        "department": "Engineering",
+        "is_on_call_role": True,
+        "responsibilities": ["Development", "Code Review"],
+        "required_skills": ["Python", "FastAPI"]
+    }
+
+
+@pytest.fixture
 def freeze_time(monkeypatch):
     """Freeze time for consistent timestamp testing."""
     frozen_time = datetime(2025, 9, 17, 12, 0, 0)
