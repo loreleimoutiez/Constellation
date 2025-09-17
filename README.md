@@ -33,21 +33,63 @@ Create a comprehensive, visual, and intuitive CMDB that goes beyond traditional 
 
 ## 🚀 Quick Start
 
-*Coming soon - Development in progress*
+### Prerequisites
 
-```bash
-# Clone the repository
-git clone https://github.com/loreleimouttez/Constellation.git
-cd Constellation
+- **Docker** and **Docker Compose** installed
+- At least 4GB RAM available for containers
+- Ports 7474, 7687, and 8000 available
 
-# Start with Docker Compose
-docker-compose up -d
+### Development Setup
 
-# Access the application
-# Frontend: http://localhost:3000
-# API Docs: http://localhost:8000/docs
-# Neo4j Browser: http://localhost:7474
-```
+1. **Clone and setup**:
+   ```bash
+   git clone https://github.com/loreleimoutiez/Constellation.git
+   cd Constellation
+   ./dev-setup.sh
+   ```
+
+2. **Or manual setup**:
+   ```bash
+   # Copy environment file
+   cp .env.example .env
+   
+   # Build and start services
+   make dev
+   
+   # View logs
+   make logs
+   ```
+
+3. **Access the services**:
+   - 📊 **Neo4j Browser**: http://localhost:7474
+     - Username: `neo4j`
+     - Password: `constellation123`
+   - 📚 **API Documentation**: http://localhost:8000/docs
+   - 🔍 **API Health Check**: http://localhost:8000/health
+
+### Development Commands
+
+| Command | Description |
+|---------|-------------|
+| `make dev` | Quick development setup (build + start) |
+| `make build` | Build all Docker containers |
+| `make up` | Start Neo4j and API services |
+| `make down` | Stop all services |
+| `make logs` | View all logs |
+| `make shell-api` | Shell access to API container |
+| `make clean` | Stop and clean up volumes |
+| `make test` | Run API tests |
+| `make status` | Show services status |
+
+### Project Status
+
+| Component | Status | Description |
+|-----------|--------|-------------|
+| 🗄️ **Data Models** | ✅ Complete | Pydantic models for CI, Human, Governance assets |
+| 🐳 **Docker Infrastructure** | ✅ Complete | Neo4j + FastAPI + development environment |
+| 🔌 **API Backend** | 🚧 In Progress | FastAPI with Neo4j integration |
+| 🎨 **Frontend** | 📋 Planned | Vue.js application |
+| 🔒 **Authentication** | 📋 Planned | JWT-based RBAC system |
 
 ## 📊 Data Model
 
@@ -83,4 +125,39 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 ---
 
-**Status**: 🚧 Early Development - MVP in Progress
+**Status**: 🚧 Early Development - Infrastructure Complete, API Development in Progress
+
+### 🧪 Testing
+
+```bash
+# Run all tests
+make test
+
+# Run with coverage
+make test-coverage
+
+# Format code
+make format
+
+# Lint code
+make lint
+```
+
+### 🔧 Configuration
+
+Key environment variables in `.env`:
+
+```bash
+# Database
+NEO4J_URI=bolt://neo4j:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=constellation123
+
+# API
+PROJECT_NAME=Constellation CMDB
+API_V1_STR=/api/v1
+SECRET_KEY=your-secret-key-here
+
+# CORS
+BACKEND_CORS_ORIGINS=["http://localhost:3000"]
+```

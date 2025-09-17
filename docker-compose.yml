@@ -63,13 +63,6 @@ services:
       neo4j:
         condition: service_healthy
     restart: unless-stopped
-    develop:
-      watch:
-        - action: sync
-          path: ./backend
-          target: /app
-        - action: rebuild
-          path: ./backend/requirements.txt
 
   # Frontend Vue.js Application (for future use)
   frontend:
@@ -93,11 +86,6 @@ services:
     restart: unless-stopped
     profiles:
       - frontend  # Only start when explicitly requested
-    develop:
-      watch:
-        - action: sync
-          path: ./frontend/src
-          target: /app/src
 
 volumes:
   neo4j_data:
