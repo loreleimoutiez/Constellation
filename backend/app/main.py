@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
 from .database import neo4j_connection
-from .api.ci_endpoints import router as ci_router
+from .api import ci_endpoints, impact_endpoints
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -59,7 +59,9 @@ app.add_middleware(
 )
 
 # Include API routers
-app.include_router(ci_router, prefix=settings.api_prefix)
+# Include routers
+app.include_router(ci_endpoints.router, prefix=settings.api_prefix)
+app.include_router(impact_endpoints.router, prefix=settings.api_prefix)
 
 
 @app.get("/")

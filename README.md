@@ -67,6 +67,26 @@ Create a comprehensive, visual, and intuitive CMDB that goes beyond traditional 
    - 📚 **API Documentation**: http://localhost:8000/docs
    - 🔍 **API Health Check**: http://localhost:8000/health
 
+### Available API Endpoints
+
+The API provides comprehensive Configuration Item management:
+
+- **CRUD Operations**:
+  - `POST /api/v1/cis` - Create new CI
+  - `GET /api/v1/cis` - List CIs with filtering
+  - `GET /api/v1/cis/{id}` - Get specific CI
+  - `PUT /api/v1/cis/{id}` - Update CI
+  - `DELETE /api/v1/cis/{id}` - Delete CI
+
+- **Search & Analytics**:
+  - `GET /api/v1/cis/search?q=term` - Search CIs by text
+  - `GET /api/v1/cis/count` - Get total CI count
+  - `GET /api/v1/database/test` - Test database connectivity
+
+- **System Endpoints**:
+  - `GET /health` - Health check with DB status
+  - `GET /docs` - Interactive API documentation
+
 ### Development Commands
 
 | Command | Description |
@@ -87,8 +107,11 @@ Create a comprehensive, visual, and intuitive CMDB that goes beyond traditional 
 |-----------|--------|-------------|
 | 🗄️ **Data Models** | ✅ Complete | Pydantic models for CI, Human, Governance assets |
 | 🐳 **Docker Infrastructure** | ✅ Complete | Neo4j + FastAPI + development environment |
-| 🔌 **API Backend** | 🚧 In Progress | FastAPI with Neo4j integration |
-| 🎨 **Frontend** | 📋 Planned | Vue.js application |
+| 🔌 **Neo4j Integration** | ✅ Complete | Database connection with pooling and lifecycle management |
+| � **CRUD API** | ✅ Complete | Full Configuration Items endpoints with validation |
+| 🔍 **Search & Filtering** | ✅ Complete | Text search and advanced filtering capabilities |
+| 📈 **Impact Analysis** | 🚧 In Progress | Dependencies and impact query endpoints |
+| 🎨 **Frontend** | 📋 Planned | Vue.js application with graph visualization |
 | 🔒 **Authentication** | 📋 Planned | JWT-based RBAC system |
 
 ## 📊 Data Model
@@ -154,7 +177,7 @@ NEO4J_USER=neo4j
 NEO4J_PASSWORD=constellation123
 
 # API
-PROJECT_NAME=Constellation CMDB
+PROJECT_NAME=Constellation
 API_V1_STR=/api/v1
 SECRET_KEY=your-secret-key-here
 
