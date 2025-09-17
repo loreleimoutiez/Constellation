@@ -9,6 +9,7 @@ in the graph database.
 from .base import BaseAsset, TimestampMixin
 from .ci import CI, CIType
 from .relationships import RelationshipType, Relationship
+from .human import HumanAsset, Team, Role, Skill, HumanSkillRelation
 
 __all__ = [
     "BaseAsset",
@@ -17,4 +18,9 @@ __all__ = [
     "CIType",
     "RelationshipType",
     "Relationship",
+    "HumanAsset",
+    "Team", 
+    "Role",
+    "Skill",
+    "HumanSkillRelation",
 ]
