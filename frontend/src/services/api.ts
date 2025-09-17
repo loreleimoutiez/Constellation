@@ -11,18 +11,26 @@ const apiClient = axios.create({
   timeout: 10000,
 })
 
-// Types for our API responses
+// Types for our API responses - matching backend structure
 export interface CI {
   id: string
   name: string
   description?: string
   ci_type: string
-  criticality: string
-  environment: string
-  status?: string
+  criticality: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'
+  environment: 'PROD' | 'STAGING' | 'DEV' | 'TEST'
+  lifecycle_state: 'ACTIVE' | 'INACTIVE' | 'PLANNED' | 'DECOMMISSIONED'
   created_at: string
   updated_at: string
-  // ... other CI properties
+  hostname?: string
+  ip_address?: string
+  fqdn?: string
+  vendor?: string
+  model?: string
+  location?: string
+  monitoring_enabled?: boolean
+  backup_enabled?: boolean
+  // ... other CI properties from backend
 }
 
 export interface Relationship {
