@@ -9,10 +9,15 @@
               <h1 class="text-3xl font-bold text-gray-900">Assets</h1>
               <p class="mt-2 text-gray-600">Manage your configuration items</p>
             </div>
-            <BaseButton @click="createNewAsset">
-              <PlusIcon class="h-5 w-5 mr-2" />
+            <router-link 
+              to="/assets/new" 
+              class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
               Add Asset
-            </BaseButton>
+            </router-link>
           </div>
         </div>
       </div>
@@ -37,6 +42,7 @@
           @change="handleFilterChange"
         >
           <option value="">All Types</option>
+          <!-- Tangible Assets -->
           <option value="APPLICATION">Application</option>
           <option value="DATABASE">Database</option>
           <option value="HARDWARE">Hardware</option>
@@ -44,6 +50,13 @@
           <option value="SERVICE">Service</option>
           <option value="STORAGE">Storage</option>
           <option value="GENERIC">Generic</option>
+          <!-- Intangible Assets -->
+          <option value="PERSON">Person</option>
+          <option value="POLICY">Policy</option>
+          <option value="LICENSE">License</option>
+          <option value="CONTRACT">Contract</option>
+          <option value="DOCUMENTATION">Documentation</option>
+          <option value="CERTIFICATE">Certificate</option>
         </select>
 
         <select
@@ -141,9 +154,12 @@
     <div v-else-if="filteredAssets.length === 0" class="text-center py-12">
       <ServerIcon class="mx-auto h-12 w-12 text-gray-400" />
       <p class="mt-2 text-gray-600">No assets found</p>
-      <BaseButton class="mt-4" @click="createNewAsset">
+      <router-link 
+        to="/assets/new" 
+        class="mt-4 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+      >
         Add your first asset
-      </BaseButton>
+      </router-link>
     </div>
 
     <div v-else class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -194,14 +210,14 @@
               </span>
             </div>
             
-            <!-- Environment -->
-            <div class="flex items-center space-x-2">
+            <!-- Environment - uniquement pour les assets tangibles -->
+            <div v-if="asset.category === 'tangible'" class="flex items-center space-x-2">
               <span class="text-xs text-gray-500">Environment:</span>
               <span class="text-xs font-medium text-gray-700">{{ asset.environment || 'N/A' }}</span>
             </div>
             
-            <!-- Status -->
-            <div class="flex items-center space-x-2">
+            <!-- Status - uniquement pour les assets tangibles -->
+            <div v-if="asset.category === 'tangible'" class="flex items-center space-x-2">
               <span class="text-xs text-gray-500">Status:</span>
               <div class="flex items-center space-x-1">
                 <div
@@ -256,13 +272,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useCMDBStore } from '@/stores/cmdb'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import {
-  PlusIcon,
   MagnifyingGlassIcon,
   ServerIcon,
   CpuChipIcon,
@@ -272,15 +287,16 @@ import {
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
+const route = useRoute()
 const cmdbStore = useCMDBStore()
 
-// Reactive data
+// Initialize filters from query parameters
 const loading = ref(false)
-const searchQuery = ref('')
-const selectedType = ref('')
-const selectedCriticality = ref('')
-const selectedEnvironment = ref('')
-const selectedLifecycleState = ref('')
+const searchQuery = ref(route.query.search as string || '')
+const selectedType = ref(route.query.ci_type as string || route.query.type as string || '')
+const selectedCriticality = ref(route.query.criticality as string || '')
+const selectedEnvironment = ref(route.query.environment as string || '')
+const selectedLifecycleState = ref(route.query.lifecycle_state as string || '')
 const currentPage = ref(1)
 const pageSize = ref(12)
 
@@ -378,10 +394,6 @@ const clearFilters = () => {
   selectedEnvironment.value = ''
   selectedLifecycleState.value = ''
   currentPage.value = 1
-}
-
-const createNewAsset = () => {
-  router.push('/assets/new')
 }
 
 const viewAsset = (id: string) => {

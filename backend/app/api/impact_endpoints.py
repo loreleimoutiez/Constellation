@@ -51,6 +51,51 @@ class BusFactorResponse(BaseModel):
 
 
 # Relationship management endpoints
+@router.get("/relationships", response_model=List[Dict[str, Any]])
+async def get_all_relationships(
+    limit: int = Query(100, ge=1, le=1000, description="Maximum number of relationships to return"),
+    offset: int = Query(0, ge=0, description="Number of relationships to skip"),
+    relationship_service: RelationshipService = Depends(get_relationship_service)
+):
+    """Get all relationships in the system."""
+    try:
+        connection = await relationship_service._get_connection()
+        
+        query = """
+        MATCH (from_ci:CI)-[r:RELATED]->(to_ci:CI)
+        RETURN r.id as rel_id, r.type as rel_type, r.created_at as rel_created_at,
+               from_ci.id as from_ci_id, from_ci.name as from_ci_name,
+               to_ci.id as to_ci_id, to_ci.name as to_ci_name
+        ORDER BY r.created_at DESC
+        SKIP $offset LIMIT $limit
+        """
+        
+        result = await connection.execute_query(query, {"offset": offset, "limit": limit})
+        relationships = []
+        
+        for record in result:
+            relationships.append({
+                "id": record.get("rel_id"),
+                "type": record.get("rel_type"),
+                "from_ci": {
+                    "id": record.get("from_ci_id"),
+                    "name": record.get("from_ci_name")
+                },
+                "to_ci": {
+                    "id": record.get("to_ci_id"),
+                    "name": record.get("to_ci_name")
+                },
+                "created_at": str(record.get("rel_created_at")) if record.get("rel_created_at") else None
+            })
+        
+        logger.info(f"Retrieved {len(relationships)} relationships")
+        return relationships
+        
+    except Exception as e:
+        logger.error(f"Error getting all relationships: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get relationships: {str(e)}")
+
+
 @router.post("/relationships", response_model=Dict[str, str], status_code=201)
 async def create_relationship(
     relationship_data: RelationshipCreateRequest,

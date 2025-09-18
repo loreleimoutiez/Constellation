@@ -76,11 +76,12 @@
                 <label class="block text-sm font-medium text-gray-700">Criticality</label>
                 <p class="mt-1 text-sm text-gray-900">{{ asset.criticality }}</p>
               </div>
-              <div>
+              <!-- Environment et Lifecycle State uniquement pour les assets tangibles -->
+              <div v-if="asset.category === 'tangible'">
                 <label class="block text-sm font-medium text-gray-700">Environment</label>
                 <p class="mt-1 text-sm text-gray-900">{{ asset.environment }}</p>
               </div>
-              <div>
+              <div v-if="asset.category === 'tangible'">
                 <label class="block text-sm font-medium text-gray-700">Lifecycle State</label>
                 <div class="flex items-center space-x-2 mt-1">
                   <div
@@ -131,8 +132,8 @@
             </div>
           </BaseCard>
 
-          <!-- Operational Flags -->
-          <BaseCard>
+          <!-- Operational Flags - uniquement pour les assets tangibles -->
+          <BaseCard v-if="asset.category === 'tangible'">
             <template #header>
               <h2 class="text-lg font-semibold text-gray-900">Operational Status</h2>
             </template>
@@ -324,11 +325,16 @@ const editAsset = () => {
   }
 }
 
-const deleteAsset = () => {
-  if (asset.value && confirm(`Are you sure you want to delete "${asset.value.name}"?`)) {
-    // For now, just show a placeholder
-    alert('Delete functionality will be implemented in the next step!')
-    // Implement delete logic here
+const deleteAsset = async () => {
+  if (asset.value && confirm(`Are you sure you want to delete "${asset.value.name}"? This action cannot be undone.`)) {
+    try {
+      await cmdbStore.deleteCI(asset.value.id)
+      // Navigate back to assets list after successful deletion
+      router.push('/assets')
+    } catch (error) {
+      console.error('Failed to delete asset:', error)
+      alert('Failed to delete asset. Please try again.')
+    }
   }
 }
 

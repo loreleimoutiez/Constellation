@@ -185,23 +185,6 @@
           </div>
 
           <div class="flex items-center space-x-4">
-            <!-- Search -->
-            <div class="relative max-w-xs w-full">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg class="h-4 w-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="11" cy="11" r="8" />
-                  <path d="m21 21-4.35-4.35" />
-                </svg>
-              </div>
-              <input 
-                type="text" 
-                placeholder="Search assets..." 
-                class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 text-sm"
-                v-model="searchQuery"
-                @keydown.enter="handleSearch"
-              />
-            </div>
-
             <!-- Notifications -->
             <button class="p-2 text-gray-400 hover:text-gray-500">
               <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -238,7 +221,6 @@ import { useRoute } from 'vue-router'
 const route = useRoute()
 const isMobileMenuOpen = ref(false)
 const isSidebarCollapsed = ref(false)
-const searchQuery = ref('')
 
 // Breadcrumbs computation
 const breadcrumbs = computed(() => {
@@ -252,12 +234,6 @@ const breadcrumbs = computed(() => {
     }
   })
 })
-
-// Search handler
-const handleSearch = () => {
-  console.log('Searching for:', searchQuery.value)
-  // TODO: Implement search functionality
-}
 </script>
 
 <style>

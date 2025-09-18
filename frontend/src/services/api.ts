@@ -12,14 +12,66 @@ const apiClient = axios.create({
 })
 
 // Types for our API responses - matching backend structure
+export type AssetCategory = 'tangible' | 'intangible'
+
+export type TangibleAssetType = 
+  | 'server' | 'database' | 'application' | 'network' | 'storage' | 'service'
+
+export type IntangibleAssetType = 
+  | 'human' | 'team' | 'role'           // Human resources
+  | 'policy' | 'procedure' | 'standard' // Governance
+  | 'license' | 'contract' | 'sla'      // Legal/contractual
+  | 'process' | 'workflow'              // Business processes
+  | 'knowledge' | 'documentation'       // Intellectual capital
+  | 'virtual_machine' | 'container' | 'software' | 'api' | 'microservice' // Logical assets
+
+export interface HumanAttributes {
+  email?: string
+  department?: string
+  job_title?: string
+  manager?: string
+  skills?: string[]
+  certifications?: string[]
+  phone?: string
+  employee_id?: string
+}
+
+export interface PolicyAttributes {
+  policy_type?: 'security' | 'compliance' | 'operational' | 'hr'
+  approval_status?: 'draft' | 'approved' | 'under_review' | 'deprecated'
+  approval_date?: string
+  review_date?: string
+  owner_department?: string
+  compliance_frameworks?: string[]
+}
+
+export interface LicenseAttributes {
+  license_type?: string
+  vendor?: string
+  license_key?: string
+  seats_total?: number
+  seats_used?: number
+  cost_per_seat?: number
+  renewal_date?: string
+  support_level?: string
+}
+
 export interface CI {
   id: string
   name: string
   description?: string
   ci_type: string
+  // New fields for intangible assets
+  category?: AssetCategory
+  intangible_type?: IntangibleAssetType
+  // Specialized attributes based on type
+  human_attributes?: HumanAttributes
+  policy_attributes?: PolicyAttributes
+  license_attributes?: LicenseAttributes
+  // Original fields
   criticality: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'
-  environment: 'PROD' | 'STAGING' | 'DEV' | 'TEST'
-  lifecycle_state: 'ACTIVE' | 'INACTIVE' | 'PLANNED' | 'DECOMMISSIONED'
+  environment?: 'PROD' | 'STAGING' | 'DEV' | 'TEST'
+  lifecycle_state?: 'ACTIVE' | 'INACTIVE' | 'PLANNED' | 'DECOMMISSIONED'
   created_at: string
   updated_at: string
   hostname?: string
@@ -33,14 +85,28 @@ export interface CI {
   // ... other CI properties from backend
 }
 
+export type RelationType = 
+  // Technical relations (tangible)
+  | 'depends_on' | 'connects_to' | 'hosts' | 'uses' | 'communicates_with'
+  // Human relations (intangible)  
+  | 'assigned_to' | 'managed_by' | 'owned_by' | 'responsible_for'
+  // Governance relations
+  | 'governed_by' | 'complies_with' | 'approved_by' | 'reviewed_by'
+  // Business relations
+  | 'licensed_under' | 'requires_skill' | 'supports_process'
+
 export interface Relationship {
   id: string
-  type: string
+  type: RelationType
   direction: 'incoming' | 'outgoing'
   related_ci: {
     id: string
     name: string
+    category?: AssetCategory
+    ci_type: string
   }
+  description?: string
+  strength?: 'strong' | 'medium' | 'weak'
   created_at?: string
 }
 
@@ -108,6 +174,13 @@ class ConstellationAPI {
   async getRelationships(ciId: string, direction: 'incoming' | 'outgoing' | 'both' = 'both'): Promise<Relationship[]> {
     const response = await apiClient.get(`/api/v1/cis/${ciId}/relationships`, {
       params: { direction }
+    })
+    return response.data
+  }
+
+  async getAllRelationships(limit: number = 100, offset: number = 0): Promise<Relationship[]> {
+    const response = await apiClient.get('/api/v1/relationships', {
+      params: { limit, offset }
     })
     return response.data
   }

@@ -122,6 +122,21 @@ export const useCMDBStore = defineStore('cmdb', () => {
     }
   }
 
+  async function fetchAllRelationships(limit: number = 1000) {
+    loading.value = true
+    error.value = null
+    try {
+      const rels = await api.getAllRelationships(limit, 0)
+      relationships.value = rels
+      return rels
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to fetch all relationships'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function createRelationship(relationshipData: {
     from_ci_id: string
     to_ci_id: string
@@ -223,6 +238,7 @@ export const useCMDBStore = defineStore('cmdb', () => {
     updateCI,
     deleteCI,
     fetchRelationships,
+    fetchAllRelationships,
     createRelationship,
     fetchImpactAnalysis,
     fetchBusFactorAnalysis,

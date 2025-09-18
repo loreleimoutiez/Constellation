@@ -33,6 +33,24 @@
             </template>
             
             <div class="space-y-6">
+              <!-- Asset Category Selection -->
+              <div>
+                <label for="category" class="block text-sm font-medium text-gray-700">Asset Category *</label>
+                <select
+                  id="category"
+                  v-model="form.category"
+                  required
+                  @change="onCategoryChange"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-constellation-500 focus:border-constellation-500"
+                  :class="{ 'border-red-500': errors.category }"
+                >
+                  <option value="">Select category</option>
+                  <option value="tangible">Tangible (Physical/Technical Assets)</option>
+                  <option value="intangible">Intangible (People, Policies, Processes, Virtual Assets)</option>
+                </select>
+                <p v-if="errors.category" class="mt-1 text-sm text-red-600">{{ errors.category }}</p>
+              </div>
+
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label for="name" class="block text-sm font-medium text-gray-700">Name *</label>
@@ -46,7 +64,9 @@
                 </div>
                 
                 <div>
-                  <label for="ci_type" class="block text-sm font-medium text-gray-700">Type *</label>
+                  <label for="ci_type" class="block text-sm font-medium text-gray-700">
+                    {{ form.category === 'intangible' ? 'Intangible Type' : 'Type' }} *
+                  </label>
                   <select
                     id="ci_type"
                     v-model="form.ci_type"
@@ -54,14 +74,52 @@
                     class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-constellation-500 focus:border-constellation-500"
                     :class="{ 'border-red-500': errors.ci_type }"
                   >
-                    <option value="">Select type</option>
-                    <option value="APPLICATION">Application</option>
-                    <option value="DATABASE">Database</option>
-                    <option value="HARDWARE">Hardware</option>
-                    <option value="NETWORK">Network</option>
-                    <option value="SERVICE">Service</option>
-                    <option value="STORAGE">Storage</option>
-                    <option value="GENERIC">Generic</option>
+                    <option value="">{{ form.category === 'intangible' ? 'Select intangible type' : 'Select type' }}</option>
+                    
+                    <!-- Tangible Asset Types -->
+                    <template v-if="form.category === 'tangible'">
+                      <option value="APPLICATION">Application</option>
+                      <option value="DATABASE">Database</option>
+                      <option value="HARDWARE">Hardware</option>
+                      <option value="NETWORK">Network</option>
+                      <option value="SERVICE">Service</option>
+                      <option value="STORAGE">Storage</option>
+                      <option value="GENERIC">Generic</option>
+                    </template>
+                    
+                    <!-- Intangible Asset Types -->
+                    <template v-else-if="form.category === 'intangible'">
+                      <optgroup label="Human Resources">
+                        <option value="human">Person</option>
+                        <option value="team">Team</option>
+                        <option value="role">Role</option>
+                      </optgroup>
+                      <optgroup label="Governance">
+                        <option value="policy">Policy</option>
+                        <option value="procedure">Procedure</option>
+                        <option value="standard">Standard</option>
+                      </optgroup>
+                      <optgroup label="Legal/Contractual">
+                        <option value="license">License</option>
+                        <option value="contract">Contract</option>
+                        <option value="sla">SLA</option>
+                      </optgroup>
+                      <optgroup label="Business Processes">
+                        <option value="process">Process</option>
+                        <option value="workflow">Workflow</option>
+                      </optgroup>
+                      <optgroup label="Knowledge">
+                        <option value="knowledge">Knowledge</option>
+                        <option value="documentation">Documentation</option>
+                      </optgroup>
+                      <optgroup label="Virtual/Logical Assets">
+                        <option value="virtual_machine">Virtual Machine</option>
+                        <option value="container">Container</option>
+                        <option value="software">Software</option>
+                        <option value="api">API</option>
+                        <option value="microservice">Microservice</option>
+                      </optgroup>
+                    </template>
                   </select>
                   <p v-if="errors.ci_type" class="mt-1 text-sm text-red-600">{{ errors.ci_type }}</p>
                 </div>
@@ -94,7 +152,8 @@
                   </select>
                 </div>
 
-                <div>
+                <!-- Environment et Lifecycle State uniquement pour les assets tangibles -->
+                <div v-if="form.category === 'tangible'">
                   <label for="environment" class="block text-sm font-medium text-gray-700">Environment *</label>
                   <select
                     id="environment"
@@ -109,7 +168,7 @@
                   </select>
                 </div>
 
-                <div>
+                <div v-if="form.category === 'tangible'">
                   <label for="lifecycle_state" class="block text-sm font-medium text-gray-700">Lifecycle State</label>
                   <select
                     id="lifecycle_state"
@@ -126,8 +185,8 @@
             </div>
           </BaseCard>
 
-          <!-- Technical Information -->
-          <BaseCard>
+          <!-- Technical Information (Tangible Assets Only) -->
+          <BaseCard v-if="form.category === 'tangible'">
             <template #header>
               <h2 class="text-lg font-semibold text-gray-900">Technical Information</h2>
             </template>
@@ -174,6 +233,268 @@
                 <BaseInput
                   id="model"
                   v-model="form.model"
+                  placeholder="PowerEdge R740, ProLiant DL380..."
+                />
+              </div>
+
+              <div>
+                <label for="location" class="block text-sm font-medium text-gray-700">Location</label>
+                <BaseInput
+                  id="location"
+                  v-model="form.location"
+                  placeholder="Datacenter A, Rack 15, Unit 12"
+                />
+              </div>
+            </div>
+          </BaseCard>
+
+          <!-- Human Resources Information (Human Assets) -->
+          <BaseCard v-if="form.category === 'intangible' && ['human', 'team', 'role'].includes(form.ci_type)">
+            <template #header>
+              <h2 class="text-lg font-semibold text-gray-900">
+                {{ form.ci_type === 'human' ? 'Personal Information' : form.ci_type === 'team' ? 'Team Information' : 'Role Information' }}
+              </h2>
+            </template>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div v-if="form.ci_type === 'human'">
+                <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+                <BaseInput
+                  id="email"
+                  v-model="form.human_attributes.email"
+                  type="email"
+                  placeholder="john.doe@company.com"
+                />
+              </div>
+
+              <div>
+                <label for="department" class="block text-sm font-medium text-gray-700">Department</label>
+                <BaseInput
+                  id="department"
+                  v-model="form.human_attributes.department"
+                  placeholder="IT, HR, Finance..."
+                />
+              </div>
+
+              <div v-if="form.ci_type === 'human'">
+                <label for="job_title" class="block text-sm font-medium text-gray-700">Job Title</label>
+                <BaseInput
+                  id="job_title"
+                  v-model="form.human_attributes.job_title"
+                  placeholder="Senior Developer, System Administrator..."
+                />
+              </div>
+
+              <div v-if="form.ci_type === 'human'">
+                <label for="manager" class="block text-sm font-medium text-gray-700">Manager</label>
+                <BaseInput
+                  id="manager"
+                  v-model="form.human_attributes.manager"
+                  placeholder="Manager name or ID"
+                />
+              </div>
+
+              <div v-if="form.ci_type === 'human'">
+                <label for="phone" class="block text-sm font-medium text-gray-700">Phone</label>
+                <BaseInput
+                  id="phone"
+                  v-model="form.human_attributes.phone"
+                  placeholder="+1 (555) 123-4567"
+                />
+              </div>
+
+              <div v-if="form.ci_type === 'human'">
+                <label for="employee_id" class="block text-sm font-medium text-gray-700">Employee ID</label>
+                <BaseInput
+                  id="employee_id"
+                  v-model="form.human_attributes.employee_id"
+                  placeholder="EMP001234"
+                />
+              </div>
+            </div>
+          </BaseCard>
+
+          <!-- Policy/Governance Information -->
+          <BaseCard v-if="form.category === 'intangible' && ['policy', 'procedure', 'standard'].includes(form.ci_type)">
+            <template #header>
+              <h2 class="text-lg font-semibold text-gray-900">Governance Information</h2>
+            </template>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label for="policy_type" class="block text-sm font-medium text-gray-700">Policy Type</label>
+                <select
+                  id="policy_type"
+                  v-model="form.policy_attributes.policy_type"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-constellation-500 focus:border-constellation-500"
+                >
+                  <option value="security">Security</option>
+                  <option value="compliance">Compliance</option>
+                  <option value="operational">Operational</option>
+                  <option value="hr">Human Resources</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="approval_status" class="block text-sm font-medium text-gray-700">Approval Status</label>
+                <select
+                  id="approval_status"
+                  v-model="form.policy_attributes.approval_status"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-constellation-500 focus:border-constellation-500"
+                >
+                  <option value="draft">Draft</option>
+                  <option value="under_review">Under Review</option>
+                  <option value="approved">Approved</option>
+                  <option value="deprecated">Deprecated</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="owner_department" class="block text-sm font-medium text-gray-700">Owner Department</label>
+                <BaseInput
+                  id="owner_department"
+                  v-model="form.policy_attributes.owner_department"
+                  placeholder="IT Security, Legal, HR..."
+                />
+              </div>
+
+              <div>
+                <label for="approval_date" class="block text-sm font-medium text-gray-700">Approval Date</label>
+                <BaseInput
+                  id="approval_date"
+                  v-model="form.policy_attributes.approval_date"
+                  type="date"
+                />
+              </div>
+
+              <div>
+                <label for="review_date" class="block text-sm font-medium text-gray-700">Next Review Date</label>
+                <BaseInput
+                  id="review_date"
+                  v-model="form.policy_attributes.review_date"
+                  type="date"
+                />
+              </div>
+            </div>
+          </BaseCard>
+
+          <!-- License Information -->
+          <BaseCard v-if="form.category === 'intangible' && ['license', 'contract', 'sla'].includes(form.ci_type)">
+            <template #header>
+              <h2 class="text-lg font-semibold text-gray-900">
+                {{ form.ci_type === 'license' ? 'License Information' : form.ci_type === 'contract' ? 'Contract Information' : 'SLA Information' }}
+              </h2>
+            </template>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div v-if="form.ci_type === 'license'">
+                <label for="license_type" class="block text-sm font-medium text-gray-700">License Type</label>
+                <BaseInput
+                  id="license_type"
+                  v-model="form.license_attributes.license_type"
+                  placeholder="Per-user, Site license, Enterprise..."
+                />
+              </div>
+
+              <div>
+                <label for="vendor" class="block text-sm font-medium text-gray-700">Vendor</label>
+                <BaseInput
+                  id="vendor"
+                  v-model="form.license_attributes.vendor"
+                  placeholder="Microsoft, Oracle, Adobe..."
+                />
+              </div>
+
+              <div v-if="form.ci_type === 'license'" class="md:col-span-2">
+                <label for="license_key" class="block text-sm font-medium text-gray-700">License Key</label>
+                <BaseInput
+                  id="license_key"
+                  v-model="form.license_attributes.license_key"
+                  placeholder="XXXXX-XXXXX-XXXXX-XXXXX"
+                  type="password"
+                />
+              </div>
+
+              <div v-if="form.ci_type === 'license'">
+                <label for="seats_total" class="block text-sm font-medium text-gray-700">Total Seats</label>
+                <BaseInput
+                  id="seats_total"
+                  v-model.number="form.license_attributes.seats_total"
+                  type="number"
+                  placeholder="100"
+                />
+              </div>
+
+              <div v-if="form.ci_type === 'license'">
+                <label for="seats_used" class="block text-sm font-medium text-gray-700">Used Seats</label>
+                <BaseInput
+                  id="seats_used"
+                  v-model.number="form.license_attributes.seats_used"
+                  type="number"
+                  placeholder="85"
+                />
+              </div>
+
+              <div v-if="form.ci_type === 'license'">
+                <label for="cost_per_seat" class="block text-sm font-medium text-gray-700">Cost per Seat</label>
+                <BaseInput
+                  id="cost_per_seat"
+                  v-model.number="form.license_attributes.cost_per_seat"
+                  type="number"
+                  step="0.01"
+                  placeholder="25.00"
+                />
+              </div>
+
+              <div>
+                <label for="renewal_date" class="block text-sm font-medium text-gray-700">
+                  {{ form.ci_type === 'license' ? 'Renewal Date' : 'Expiration Date' }}
+                </label>
+                <BaseInput
+                  id="renewal_date"
+                  v-model="form.license_attributes.renewal_date"
+                  type="date"
+                />
+              </div>
+
+              <div v-if="form.ci_type === 'license'">
+                <label for="support_level" class="block text-sm font-medium text-gray-700">Support Level</label>
+                <select
+                  id="support_level"
+                  v-model="form.license_attributes.support_level"
+                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-constellation-500 focus:border-constellation-500"
+                >
+                  <option value="">Select support level</option>
+                  <option value="basic">Basic</option>
+                  <option value="standard">Standard</option>
+                  <option value="premium">Premium</option>
+                  <option value="enterprise">Enterprise</option>
+                </select>
+              </div>
+            </div>
+          </BaseCard>
+
+          <!-- Technical Information (Tangible Assets Only) -->
+          <BaseCard v-if="form.category === 'tangible'">
+            <template #header>
+              <h2 class="text-lg font-semibold text-gray-900">Technical Information</h2>
+            </template>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label for="vendor" class="block text-sm font-medium text-gray-700">Vendor</label>
+                <BaseInput
+                  id="vendor"
+                  v-model="form.vendor"
+                  placeholder="Dell, HP, Cisco..."
+                />
+              </div>
+
+              <div>
+                <label for="model" class="block text-sm font-medium text-gray-700">Model</label>
+                <BaseInput
+                  id="model"
+                  v-model="form.model"
                   placeholder="PowerEdge R750, ProLiant DL380..."
                 />
               </div>
@@ -189,8 +510,8 @@
             </div>
           </BaseCard>
 
-          <!-- Operational Flags -->
-          <BaseCard>
+          <!-- Operational Flags (Tangible Assets Only) -->
+          <BaseCard v-if="form.category === 'tangible'">
             <template #header>
               <h2 class="text-lg font-semibold text-gray-900">Operational Settings</h2>
             </template>
@@ -252,12 +573,13 @@
                 </span>
               </div>
 
-              <div class="flex items-center justify-between">
+              <!-- Environment et State uniquement pour les assets tangibles -->
+              <div v-if="form.category === 'tangible'" class="flex items-center justify-between">
                 <span class="text-sm text-gray-600">Environment:</span>
                 <span class="text-sm font-medium">{{ form.environment || 'PROD' }}</span>
               </div>
 
-              <div class="flex items-center justify-between">
+              <div v-if="form.category === 'tangible'" class="flex items-center justify-between">
                 <span class="text-sm text-gray-600">State:</span>
                 <div class="flex items-center space-x-2">
                   <div
@@ -346,7 +668,9 @@ const isEditing = computed(() => route.params.id !== undefined)
 const form = ref({
   name: '',
   description: '',
+  category: 'tangible',
   ci_type: '',
+  intangible_type: '',
   criticality: 'MEDIUM',
   environment: 'PROD',
   lifecycle_state: 'ACTIVE',
@@ -358,11 +682,51 @@ const form = ref({
   location: '',
   monitoring_enabled: true,
   backup_enabled: false,
+  // Intangible asset specific fields
+  human_attributes: {
+    email: '',
+    department: '',
+    job_title: '',
+    manager: '',
+    skills: [],
+    certifications: [],
+    phone: '',
+    employee_id: ''
+  },
+  policy_attributes: {
+    policy_type: 'security',
+    approval_status: 'draft',
+    approval_date: '',
+    review_date: '',
+    owner_department: '',
+    compliance_frameworks: []
+  },
+  license_attributes: {
+    license_type: '',
+    vendor: '',
+    license_key: '',
+    seats_total: 0,
+    seats_used: 0,
+    cost_per_seat: 0,
+    renewal_date: '',
+    support_level: ''
+  }
 })
 
 // Computed
 const isFormValid = computed(() => {
-  return !!(form.value.name.trim() && form.value.ci_type && form.value.criticality && form.value.environment)
+  const basicFields = !!(form.value.name.trim() && form.value.criticality)
+  
+  // Pour tous les types d'assets, on vérifie ci_type
+  const typeField = !!form.value.ci_type
+  
+  // Pour les assets tangibles, environment est aussi requis
+  if (form.value.category === 'tangible') {
+    return basicFields && typeField && form.value.environment
+  }
+  
+  // Pour les assets intangibles, pas besoin d'environment
+  return basicFields && typeField
 })
 
 const buttonText = computed(() => {
@@ -378,6 +742,27 @@ const buttonVariant = computed(() => {
 })
 
 // Methods
+const onCategoryChange = () => {
+  // Reset ci_type when category changes
+  form.value.ci_type = ''
+  form.value.intangible_type = ''
+  
+  // Set appropriate defaults based on category
+  if (form.value.category === 'intangible') {
+    // Pour les assets intangibles, on retire environment et lifecycle_state
+    form.value.environment = ''
+    form.value.lifecycle_state = ''
+    form.value.monitoring_enabled = false
+    form.value.backup_enabled = false
+  } else {
+    // Pour les assets tangibles, on garde les valeurs par défaut
+    form.value.environment = 'PROD'
+    form.value.lifecycle_state = 'ACTIVE'
+    form.value.monitoring_enabled = true
+    form.value.backup_enabled = false
+  }
+}
+
 const getAssetIcon = (type: string) => {
   const iconMap: Record<string, any> = {
     APPLICATION: ComputerDesktopIcon,
@@ -408,8 +793,12 @@ const validateForm = () => {
     errors.value.name = 'Name is required'
   }
 
+  if (!form.value.category) {
+    errors.value.category = 'Category is required'
+  }
+
   if (!form.value.ci_type) {
-    errors.value.ci_type = 'Type is required'
+    errors.value.ci_type = form.value.category === 'intangible' ? 'Intangible type is required' : 'Type is required'
   }
 
   return Object.keys(errors.value).length === 0
@@ -419,10 +808,12 @@ const resetForm = () => {
   form.value = {
     name: '',
     description: '',
+    category: 'tangible',
     ci_type: '',
+    intangible_type: '',
     criticality: 'MEDIUM',
-    environment: 'PROD',
-    lifecycle_state: 'ACTIVE',
+    environment: 'PROD',  // Sera ajusté par updateFormDefaults si intangible
+    lifecycle_state: 'ACTIVE',  // Sera ajusté par updateFormDefaults si intangible
     hostname: '',
     ip_address: '',
     fqdn: '',
@@ -431,6 +822,35 @@ const resetForm = () => {
     location: '',
     monitoring_enabled: true,
     backup_enabled: false,
+    // Intangible asset specific fields
+    human_attributes: {
+      email: '',
+      department: '',
+      job_title: '',
+      manager: '',
+      skills: [],
+      certifications: [],
+      phone: '',
+      employee_id: ''
+    },
+    policy_attributes: {
+      policy_type: 'security',
+      approval_status: 'draft',
+      approval_date: '',
+      review_date: '',
+      owner_department: '',
+      compliance_frameworks: []
+    },
+    license_attributes: {
+      license_type: '',
+      vendor: '',
+      license_key: '',
+      seats_total: 0,
+      seats_used: 0,
+      cost_per_seat: 0,
+      renewal_date: '',
+      support_level: ''
+    }
   }
   errors.value = {}
 }
@@ -443,9 +863,61 @@ const handleSubmit = async () => {
   loading.value = true
 
   try {
-    // Clean up empty strings and prepare data
-    const cleanedForm = Object.fromEntries(
-      Object.entries(form.value).filter(([_, value]) => value !== '' && value !== null)
+    // Prepare data based on category
+    let cleanedForm = { ...form.value }
+    
+    // Pour les assets intangibles, on ajuste la structure des données
+    if (form.value.category === 'intangible') {
+      // Exclure environment et lifecycle_state pour les assets intangibles
+      // Le backend utilisera ses valeurs par défaut
+      const { environment, lifecycle_state, ...intangibleForm } = cleanedForm
+      cleanedForm = intangibleForm
+      
+      // Mapper les types intangibles vers les types backend valides
+      const intangibleTypeMapping: Record<string, string> = {
+        'human': 'IDENTITY',
+        'team': 'IDENTITY', 
+        'role': 'IDENTITY',
+        'policy': 'GENERIC',
+        'procedure': 'GENERIC',
+        'standard': 'GENERIC',
+        'license': 'SOFTWARE',
+        'contract': 'GENERIC',
+        'sla': 'GENERIC',
+        'process': 'SERVICE',
+        'workflow': 'SERVICE',
+        'knowledge': 'DATASET',
+        'documentation': 'DATASET',
+        'virtual_machine': 'HARDWARE',
+        'container': 'SOFTWARE',
+        'software': 'SOFTWARE',
+        'api': 'SERVICE',
+        'microservice': 'SERVICE'
+      }
+      
+      // Stocker le type original et mapper vers le type backend
+      const originalType = cleanedForm.ci_type
+      if (originalType && intangibleTypeMapping[originalType]) {
+        cleanedForm.ci_type = intangibleTypeMapping[originalType]
+      } else {
+        cleanedForm.ci_type = 'GENERIC'
+      }
+      
+      // Stocker le type original pour référence future
+      cleanedForm.custom_attributes = {
+        ...cleanedForm.custom_attributes,
+        original_intangible_type: originalType,
+        is_intangible_asset: true
+      }
+    } else {
+      // Pour les assets tangibles, supprimer intangible_type
+      const { intangible_type, ...tangibleForm } = cleanedForm
+      cleanedForm = tangibleForm
+    }
+    
+    // Clean up empty strings and null values
+    cleanedForm = Object.fromEntries(
+      Object.entries(cleanedForm).filter(([_, value]) => value !== '' && value !== null)
     )
 
     if (isEditing.value) {
@@ -459,10 +931,18 @@ const handleSubmit = async () => {
     // Redirect to assets list
     router.push('/assets')
   } catch (error) {
+    // Debug: Log the full error
+    console.error('Asset creation error:', error)
+    console.error('Error response:', error.response?.data)
+    
     // Show user-friendly error message
     let errorMessage = 'Failed to save asset. Please try again.'
     if (error.response?.data?.detail) {
       errorMessage = `Validation error: ${JSON.stringify(error.response.data.detail)}`
+    } else if (error.response?.data) {
+      errorMessage = `Error: ${JSON.stringify(error.response.data)}`
+    } else if (error.message) {
+      errorMessage = `Error: ${error.message}`
     }
     
     alert(errorMessage)

@@ -120,7 +120,7 @@
         <!-- Pagination -->
         <div v-if="totalPages > 1" class="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
           <p class="text-sm text-gray-700">
-            Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, relationships.length) }} of {{ relationships.length }} relationships
+            Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ Math.min(currentPage * pageSize, normalizedRelationships.length) }} of {{ normalizedRelationships.length }} relationships
           </p>
           <div class="flex space-x-2">
             <BaseButton
@@ -192,12 +192,37 @@ const layoutMode = ref('force')
 const cis = computed(() => cmdbStore.cis)
 const relationships = computed(() => cmdbStore.relationships)
 
-const totalPages = computed(() => Math.ceil(relationships.value.length / pageSize.value))
+// Normalize relationships to handle both formats (related_ci vs from_ci/to_ci)
+const normalizedRelationships = computed(() => {
+  return relationships.value.map(rel => {
+    // If it already has related_ci, keep it as is
+    if (rel.related_ci) {
+      return rel
+    }
+    
+    // If it has from_ci/to_ci (new format), create a normalized version
+    if (rel.from_ci && rel.to_ci) {
+      return {
+        ...rel,
+        // For display purposes, we'll show both CIs connected
+        related_ci: {
+          id: rel.to_ci.id,
+          name: `${rel.from_ci.name} → ${rel.to_ci.name}`
+        },
+        direction: 'outgoing' // Default direction for all relationships view
+      }
+    }
+    
+    return rel
+  })
+})
+
+const totalPages = computed(() => Math.ceil(normalizedRelationships.value.length / pageSize.value))
 
 const paginatedRelationships = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value
   const end = start + pageSize.value
-  return relationships.value.slice(start, end)
+  return normalizedRelationships.value.slice(start, end)
 })
 
 // Network visualization
@@ -467,7 +492,7 @@ const loadData = async () => {
   loading.value = true
   try {
     await cmdbStore.fetchCIs()
-    // Note: relationships will be fetched when backend API is ready
+    await cmdbStore.fetchAllRelationships()
     await nextTick()
     initializeNetwork()
   } catch (error) {
