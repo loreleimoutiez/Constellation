@@ -1,156 +1,282 @@
 # Constellation CMDB - Development Makefile
-# Simplifies Docker Compose operations for development
+# =========================================
+# Simple commands for development workflow
 
-.PHONY: help build up down logs shell shell-api shell-neo4j clean restart status
+.PHONY: help setup start start-bg stop restart check logs up-backend check-backend build clean reset db-reset sample-data shell-api shell-neo4j test test-frontend logs-api logs-neo4j logs-live kill-frontend demo
 
-# Default target
-help: ## Show this help message
-	@echo "Constellation CMDB - Development Commands"
-	@echo "======================================="
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+# Default target - show help
+help: ## Show available commands
 	@echo ""
-	@echo "Quick Start:"
-	@echo "  1. cp .env.example .env"
-	@echo "  2. make build"
-	@echo "  3. make up"
-	@echo "  4. Open http://localhost:7474 (Neo4j Browser)"
-	@echo "  5. Open http://localhost:8000/docs (API Documentation)"
+	@echo "    ╭─────────────────────────────────────────────────────────────╮"
+	@echo "    │ ✧   ★ ✦      Configuration Management Database      ✦ ★   ✧ │"
+	@echo "    │                                                             │"
+	@echo "    │   ______                 __       ____      __  _           │"
+	@echo "    │  / ____/___  ____  _____/ /____  / / /___ _/ /_(_)___  ____ │"
+	@printf "    │ / /   / __ \\\/ __ \\\/ ___/ __/ _ \\\/ / / __ \`/ __/ / __ \\\/ __ \\\│\n"
+	@echo "    │/ /___/ /_/ / / / (__  ) /_/  __/ / / /_/ / /_/ / /_/ / / / /│"
+	@printf "    │\\\____/\\\____/_/ /_/____/\\\__/\\\___/_/_/\\\__,_/\\\__/_/\\\____/_/ /_/ │\n"
+	@echo "    │                                                             │"
+	@echo "    │ ✦   ✧ ★                                             ★ ✧   ✦ │"
+	@echo "    ╰─────────────────────────────────────────────────────────────╯"
+	@echo ""
+	@echo "ESSENTIAL COMMANDS (90% of your usage):"
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / && /ESSENTIAL/ {gsub(/## ESSENTIAL /, ""); printf "  \033[32m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+	@echo "ADVANCED COMMANDS:"
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / && !/ESSENTIAL/ {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+	@echo "QUICK START:"
+	@echo "  1. First time:     make setup"
+	@echo "  2. Daily work:     make start-bg"
+	@echo "  3. Stop work:      make stop"
+	@echo "  4. Check status:   make check"
+	@echo ""
+	@echo "TIP: Use 'make start' instead of 'start-bg' if you want to see live logs"
+	@echo ""
 
-# Build all services
-build: ## Build all Docker containers
+# ============================================================================
+# ESSENTIAL COMMANDS - Everything you need for daily development
+# ============================================================================
+
+setup: ## ESSENTIAL Setup project for first time (new developers)
+	@echo ""
+	@echo "    ╭─────────────────────────────────────────────────────────────╮"
+	@echo "    │ ✧   ★ ✦          First-time Project Setup           ✦ ★   ✧ │"
+	@echo "    │                                                             │"
+	@echo "    │   ______                 __       ____      __  _           │"
+	@echo "    │  / ____/___  ____  _____/ /____  / / /___ _/ /_(_)___  ____ │"
+	@printf "    │ / /   / __ \\\/ __ \\\/ ___/ __/ _ \\\/ / / __ \`/ __/ / __ \\\/ __ \\\│\n"
+	@echo "    │/ /___/ /_/ / / / (__  ) /_/  __/ / / /_/ / /_/ / /_/ / / / /│"
+	@printf "    │\\\____/\\\____/_/ /_/____/\\\__/\\\___/_/_/\\\__,_/\\\__/_/\\\____/_/ /_/ │\n"
+	@echo "    │                                                             │"
+	@echo "    │ ✦   ✧ ★                                             ★ ✧   ✦ │"
+	@echo "    ╰─────────────────────────────────────────────────────────────╯"
+	@echo ""
+	@echo "Setting up Constellation for the first time..."
+	@echo "=============================================="
+	@echo "1. Creating environment file..."
+	@cp .env.example .env 2>/dev/null || echo "   ✅ .env already exists"
+	@echo "2. Building Docker containers..."
+	@docker compose build
+	@echo "3. Installing frontend dependencies..."
+	@cd frontend && npm install --legacy-peer-deps --silent
+	@echo "4. Starting services for the first time..."
+	@$(MAKE) up-backend
+	@echo "5. Waiting for services to be ready..."
+	@sleep 5
+	@$(MAKE) check-backend
+	@echo ""
+	@echo "🎉 Setup complete! Your project is ready."
+	@echo "💡 Run 'make start' to begin development"
+
+start: ## ESSENTIAL Start development (backend + frontend)
+	@echo ""
+	@echo "    ╭─────────────────────────────────────────────────────────────╮"
+	@echo "    │ ✧   ★ ✦      Starting Development Environment       ✦ ★   ✧ │"
+	@echo "    │                                                             │"
+	@echo "    │   ______                 __       ____      __  _           │"
+	@echo "    │  / ____/___  ____  _____/ /____  / / /___ _/ /_(_)___  ____ │"
+	@printf "    │ / /   / __ \\\/ __ \\\/ ___/ __/ _ \\\/ / / __ \`/ __/ / __ \\\/ __ \\\│\n"
+	@echo "    │/ /___/ /_/ / / / (__  ) /_/  __/ / / /_/ / /_/ / /_/ / / / /│"
+	@printf "    │\\\____/\\\____/_/ /_/____/\\\__/\\\___/_/_/\\\__,_/\\\__/_/\\\____/_/ /_/ │\n"
+	@echo "    │                                                             │"
+	@echo "    │ ✦   ✧ ★                                             ★ ✧   ✦ │"
+	@echo "    ╰─────────────────────────────────────────────────────────────╯"
+	@echo ""
+	@echo "Starting Constellation Development Stack"
+	@echo "======================================="
+	@$(MAKE) up-backend
+	@echo "⏳ Waiting for backend to be ready..."
+	@sleep 3
+	@$(MAKE) check-backend
+	@echo "Starting frontend development server..."
+	@echo ""
+	@echo "🎯 Ready! Your URLs:"
+	@echo "   Frontend:  http://localhost:5173"
+	@echo "   API Docs:  http://localhost:8000/docs"
+	@echo "   Neo4j:     http://localhost:7474"
+	@echo ""
+	@cd frontend && npm run dev
+
+start-bg: ## ESSENTIAL Start everything in background
+	@echo ""
+	@echo "    ╭─────────────────────────────────────────────────────────────╮"
+	@echo "    │ ✧   ★ ✦         Background Development Mode         ✦ ★   ✧ │"
+	@echo "    │                                                             │"
+	@echo "    │   ______                 __       ____      __  _           │"
+	@echo "    │  / ____/___  ____  _____/ /____  / / /___ _/ /_(_)___  ____ │"
+	@printf "    │ / /   / __ \\\/ __ \\\/ ___/ __/ _ \\\/ / / __ \`/ __/ / __ \\\/ __ \\\│\n"
+	@echo "    │/ /___/ /_/ / / / (__  ) /_/  __/ / / /_/ / /_/ / /_/ / / / /│"
+	@printf "    │\\\____/\\\____/_/ /_/____/\\\__/\\\___/_/_/\\\__,_/\\\__/_/\\\____/_/ /_/ │\n"
+	@echo "    │                                                             │"
+	@echo "    │ ✦   ✧ ★                                             ★ ✧   ✦ │"
+	@echo "    ╰─────────────────────────────────────────────────────────────╯"
+	@echo ""
+	@echo "Starting Constellation (Background Mode)"
+	@echo "======================================="
+	@$(MAKE) up-backend
+	@echo "⏳ Waiting for backend to be ready..."
+	@sleep 3
+	@$(MAKE) check-backend
+	@echo "🌐 Starting frontend in background..."
+	@cd frontend && npm run dev > /dev/null 2>&1 &
+	@sleep 2
+	@echo ""
+	@echo "✅ Everything is running in background!"
+	@echo "🎯 Your URLs:"
+	@echo "   Frontend:  http://localhost:5173"
+	@echo "   API Docs:  http://localhost:8000/docs"
+	@echo "   Neo4j:     http://localhost:7474"
+	@echo ""
+	@echo "💡 Use 'make stop' to stop everything"
+	@echo "💡 Use 'make logs' to see logs"
+
+stop: ## ESSENTIAL Stop all services
+	@echo "🛑 Stopping all Constellation services..."
+	@echo "1. Stopping frontend processes..."
+	@echo '#!/bin/bash' > /tmp/stop_frontend.sh
+	@echo 'pkill -f "npm run dev" 2>/dev/null || true' >> /tmp/stop_frontend.sh
+	@echo 'pkill -f "vite" 2>/dev/null || true' >> /tmp/stop_frontend.sh
+	@chmod +x /tmp/stop_frontend.sh
+	@/tmp/stop_frontend.sh
+	@rm -f /tmp/stop_frontend.sh
+	@sleep 1
+	@echo "2. Stopping backend services..."
+	@docker compose down
+	@echo "✅ All services stopped"
+
+restart: ## ESSENTIAL Restart everything
+	@echo "🔄 Restarting Constellation..."
+	@$(MAKE) stop
+	@sleep 2
+	@$(MAKE) start-bg
+
+check: ## ESSENTIAL Check status of all services
+	@echo "🔍 Constellation Status Check"
+	@echo "============================"
+	@$(MAKE) check-backend
+	@echo ""
+	@echo "Frontend Service:"
+	@if ps aux | grep -v grep | grep -E "(npm run dev|vite)" > /dev/null 2>&1; then \
+		echo "✅ Frontend dev server is running"; \
+		if curl -s http://localhost:5173 > /dev/null 2>&1; then \
+			echo "✅ Frontend responding at http://localhost:5173"; \
+		else \
+			echo "❌ Frontend not responding"; \
+		fi; \
+	else \
+		echo "❌ Frontend dev server is not running"; \
+	fi
+	@echo ""
+	@echo "🌐 Quick Access:"
+	@echo "   Frontend:  http://localhost:5173"
+	@echo "   API Docs:  http://localhost:8000/docs"
+	@echo "   Neo4j:     http://localhost:7474"
+
+logs: ## ESSENTIAL View logs from all services
+	@echo "📋 Constellation Logs"
+	@echo "===================="
+	@echo "Backend logs:"
+	@docker compose logs --tail=20 api neo4j
+	@echo ""
+	@echo "💡 For live logs: docker compose logs -f"
+	@echo "💡 Frontend logs: check terminal where you ran 'make start'"
+
+# ============================================================================
+# ADVANCED COMMANDS - For specific needs and troubleshooting
+# ============================================================================
+
+up-backend: ## Start only backend services (Neo4j + API)
+	@echo "🚀 Starting backend services..."
+	@docker compose up -d neo4j api
+	@echo "✅ Backend services started"
+
+check-backend: ## Check backend services health
+	@echo "Backend Services:"
+	@docker compose ps
+	@echo ""
+	@echo "Health Checks:"
+	@if curl -s http://localhost:8000/health > /dev/null 2>&1; then \
+		echo "✅ API is healthy at http://localhost:8000"; \
+	else \
+		echo "❌ API is not responding"; \
+	fi
+	@if curl -s http://localhost:7474 > /dev/null 2>&1; then \
+		echo "✅ Neo4j is healthy at http://localhost:7474"; \
+	else \
+		echo "❌ Neo4j is not responding"; \
+	fi
+
+build: ## Rebuild Docker containers
 	@echo "🔧 Building Constellation containers..."
-	docker compose build
+	@docker compose build
 
-# Start all services (backend only by default)
-up: ## Start Neo4j and API services
-	@echo "🚀 Starting Constellation services..."
-	docker compose up -d neo4j api
-	@echo "✅ Services started!"
-	@echo "   Neo4j Browser: http://localhost:7474"
-	@echo "   API Docs: http://localhost:8000/docs"
-
-# Start all services including frontend
-up-all: ## Start all services including frontend
-	@echo "🚀 Starting all Constellation services..."
-	docker compose --profile frontend up -d
-	@echo "✅ All services started!"
-	@echo "   Neo4j Browser: http://localhost:7474"
-	@echo "   API Docs: http://localhost:8000/docs"
-	@echo "   Frontend: http://localhost:3000"
-
-# Stop all services
-down: ## Stop all services
-	@echo "🛑 Stopping Constellation services..."
-	docker compose down
-
-# Stop and remove all containers, networks, and volumes
-clean: ## Stop services and clean up volumes
+clean: ## Clean up containers and volumes
 	@echo "🧹 Cleaning up Constellation environment..."
-	docker compose down -v --remove-orphans
-	docker volume prune -f
+	@docker compose down -v --remove-orphans
+	@docker system prune -f
+	@echo "✅ Cleanup complete"
 
-# View logs
-logs: ## Show logs for all services
-	docker compose logs -f
-
-# View API logs only
-logs-api: ## Show API logs only
-	docker compose logs -f api
-
-# View Neo4j logs only
-logs-neo4j: ## Show Neo4j logs only
-	docker compose logs -f neo4j
-
-# Restart all services
-restart: ## Restart all services
-	@echo "🔄 Restarting Constellation services..."
-	docker compose restart
-
-# Show service status
-status: ## Show status of all services
-	@echo "📊 Constellation Services Status:"
-	docker compose ps
-
-# Shell access to API container
-shell-api: ## Open shell in API container
-	docker compose exec api bash
-
-# Shell access to Neo4j container
-shell-neo4j: ## Open shell in Neo4j container
-	docker compose exec neo4j bash
-
-# Run API tests
-test: ## Run API tests
-	docker compose exec api python -m pytest tests/ -v
-
-# Run API tests with coverage
-test-coverage: ## Run API tests with coverage report
-	docker compose exec api python -m pytest tests/ --cov=app --cov-report=html --cov-report=term
-
-# Format code
-format: ## Format code with black and isort
-	docker compose exec api black app tests
-	docker compose exec api isort app tests
-
-# Lint code
-lint: ## Lint code with flake8
-	docker compose exec api flake8 app tests
-
-# Install new dependencies
-install: ## Install new dependencies (run after updating requirements.txt)
-	docker compose build api
-	docker compose up -d api
+reset: ## Complete reset (clean + build + setup)
+	@echo "🔄 Complete reset of Constellation..."
+	@$(MAKE) clean
+	@$(MAKE) build
+	@$(MAKE) up-backend
+	@echo "✅ Reset complete"
 
 # Database operations
-db-reset: ## Reset Neo4j database (WARNING: deletes all data)
-	@echo "⚠️  This will delete ALL data in Neo4j database!"
-	@read -p "Are you sure? [y/N] " -n 1 -r; \
-	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
-		echo ""; \
+db-reset: ## Reset Neo4j database (⚠️ DELETES ALL DATA)
+	@echo "⚠️  WARNING: This will delete ALL data in Neo4j!"
+	@read -p "Are you sure? Type 'yes' to continue: " response; \
+	if [ "$$response" = "yes" ]; then \
 		echo "🗑️  Resetting database..."; \
 		docker compose exec neo4j cypher-shell -u neo4j -p constellation123 "MATCH (n) DETACH DELETE n"; \
 		echo "✅ Database reset complete"; \
 	else \
-		echo ""; \
 		echo "❌ Database reset cancelled"; \
 	fi
 
-# Backup database
-db-backup: ## Backup Neo4j database
-	@echo "💾 Creating database backup..."
-	mkdir -p backups
-	docker compose exec neo4j neo4j-admin dump --database=neo4j --to=/var/lib/neo4j/backups/constellation-$(shell date +%Y%m%d_%H%M%S).dump
-	docker cp constellation-neo4j:/var/lib/neo4j/backups/. ./backups/
-	@echo "✅ Backup created in ./backups/"
-
-# Load sample data
 sample-data: ## Load sample CMDB data
 	@echo "📊 Loading sample data..."
-	docker compose exec api python scripts/load_sample_data.py
+	@docker compose exec api python scripts/load_sample_data.py
 	@echo "✅ Sample data loaded"
 
-# Development workflow
-dev: build up ## Quick development setup (build + up)
+# Shell access
+shell-api: ## Open shell in API container
+	@docker compose exec api bash
 
-# Frontend development
-frontend-dev: ## Start development with frontend
-	@echo "🚀 Starting full stack development (including frontend)..."
-	docker compose --profile frontend up -d
+shell-neo4j: ## Open shell in Neo4j container  
+	@docker compose exec neo4j bash
 
-frontend-build: ## Build frontend container only
-	@echo "🔧 Building frontend container..."
-	docker compose build frontend
+# Testing
+test: ## Run API tests
+	@echo "🧪 Running API tests..."
+	@docker compose exec api python -m pytest tests/ -v
 
-frontend-logs: ## Show frontend logs
-	docker compose logs -f frontend
+test-frontend: ## Run frontend tests
+	@echo "🧪 Running frontend tests..."
+	@cd frontend && npm test
 
-# Production-like setup (without development volumes)
-prod-test: ## Test production-like setup
-	docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Development utilities
+logs-api: ## Show API logs only
+	@docker compose logs -f api
 
-# Update all containers
-update: ## Pull latest images and rebuild
-	@echo "🔄 Updating Constellation containers..."
-	docker compose pull
-	docker compose build --pull
-	@echo "✅ Update complete"
+logs-neo4j: ## Show Neo4j logs only
+	@docker compose logs -f neo4j
+
+logs-live: ## Show live logs for all services
+	@docker compose logs -f
+
+kill-frontend: ## Force kill frontend processes
+	@echo "🔪 Force killing frontend processes..."
+	@pkill -9 -f "npm run dev" 2>/dev/null || true
+	@pkill -9 -f "vite" 2>/dev/null || true
+	@echo "✅ Frontend processes killed"
+
+# Containers-only mode (for demos/production testing)
+demo: ## Start everything in containers (demo mode)
+	@echo "🎬 Starting Constellation in demo mode..."
+	@docker compose --profile frontend up -d
+	@echo "✅ Demo mode started - all services in containers"
+	@echo "🌐 Frontend: http://localhost:3000"
+	@echo "📚 API Docs: http://localhost:8000/docs"
