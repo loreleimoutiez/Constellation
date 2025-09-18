@@ -34,8 +34,11 @@ make start-bg
 
 ## Development Commands
 
-### Essential Commands (90% of usage)
+Tip: run `make help` anytime to see all available commands.
 
+<details>
+<summary>Click to expand commands</summary>
+  
 | Command | Description |
 |---------|-------------|
 | `make setup` | **First-time setup** (new developers) |
@@ -46,8 +49,7 @@ make start-bg
 | `make check` | **Check status** of all services |
 | `make logs` | **View logs** from all services |
 
-### Advanced Commands
-
+</details>
 <details>
 <summary>Click to expand advanced options</summary>
 
@@ -64,6 +66,14 @@ make start-bg
 | `make demo` | Start everything in containers (demo mode) |
 
 </details>
+
+## Use Cases
+
+- **"What breaks if this server fails?"** → Impact Analysis
+- **"Who has access to this system?"** → Dependency tracking  
+- **"Which services have no backup maintainer?"** → Bus factor analysis
+- **"What policies cover this data?"** → Compliance mapping
+- **"What's the blast radius of this change?"** → Change impact assessment
 
 ## Architecture
 
@@ -89,11 +99,6 @@ make start-bg
 - **Search & Filtering**: Text search and advanced filtering capabilities
 - **Health Monitoring**: Service health checks and monitoring
 
-### In Development
-- **Frontend-Backend Integration**: Connecting Vue.js components to API
-- **Authentication & Authorization**: JWT-based RBAC system
-- **Enhanced Reporting**: Advanced analytics and reporting features
-
 ## Development Workflow
 
 ### Daily Development
@@ -110,18 +115,6 @@ make logs-api      # API logs only
 
 # End your session
 make stop          # Stop everything cleanly
-```
-
-### Development Modes
-
-**Background Mode** (recommended):
-```bash
-make start-bg      # Frees your terminal for other commands
-```
-
-**Interactive Mode**:
-```bash
-make start         # Shows frontend logs in real-time (Ctrl+C to stop)
 ```
 
 ## API Endpoints
@@ -155,14 +148,6 @@ Constellation models your infrastructure as interconnected nodes:
 - **Governance**: Processes, Policies, Controls, Risks
 - **External**: Vendors, Partners, Contracts
 - **Digital Assets**: Datasets, Identities, Credentials
-
-## Use Cases
-
-- **"What breaks if this server fails?"** → Impact Analysis
-- **"Who has access to this system?"** → Dependency tracking  
-- **"Which services have no backup maintainer?"** → Bus factor analysis
-- **"What policies cover this data?"** → Compliance mapping
-- **"What's the blast radius of this change?"** → Change impact assessment
 
 ## Testing
 
