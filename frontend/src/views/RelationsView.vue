@@ -45,25 +45,57 @@
       
       <!-- Network Graph Container -->
       <div class="relative">
-        <div ref="networkContainer" class="w-full h-96 border border-gray-200 rounded-lg bg-white"></div>
-        
-        <!-- Loading Overlay -->
-        <div v-if="networkLoading" class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
-          <div class="text-center">
-            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-constellation-600"></div>
-            <p class="mt-2 text-gray-600">Building network...</p>
+        <!-- Desktop Network Visualization -->
+        <div class="hidden lg:block">
+          <div ref="networkContainer" class="w-full h-[600px] border border-gray-200 rounded-lg bg-white"></div>
+          
+          <!-- Loading Overlay -->
+          <div v-if="networkLoading" class="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
+            <div class="text-center">
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-constellation-600"></div>
+              <p class="mt-2 text-gray-600">Building network...</p>
+            </div>
+          </div>
+          
+          <!-- Empty State -->
+          <div v-if="!networkLoading && cis.length === 0" class="absolute inset-0 flex items-center justify-center">
+            <div class="text-center">
+              <ServerIcon class="mx-auto h-12 w-12 text-gray-400 mb-4" />
+              <h3 class="text-lg font-medium text-gray-900 mb-2">No Assets Found</h3>
+              <p class="text-gray-600 mb-4">Create some assets first to visualize their relationships</p>
+              <BaseButton @click="$router.push('/assets/new')">
+                Create Asset
+              </BaseButton>
+            </div>
           </div>
         </div>
         
-        <!-- Empty State -->
-        <div v-if="!networkLoading && cis.length === 0" class="absolute inset-0 flex items-center justify-center">
-          <div class="text-center">
-            <ServerIcon class="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 class="text-lg font-medium text-gray-900 mb-2">No Assets Found</h3>
-            <p class="text-gray-600 mb-4">Create some assets first to visualize their relationships</p>
-            <BaseButton @click="$router.push('/assets/new')">
-              Create Asset
-            </BaseButton>
+        <!-- Mobile Information Message -->
+        <div class="lg:hidden bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <div class="flex items-start">
+            <div class="flex-shrink-0">
+              <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <h3 class="text-sm font-medium text-blue-800">
+                Visualisation réseau disponible sur desktop uniquement
+              </h3>
+              <div class="mt-2 text-sm text-blue-700">
+                <p>La visualisation interactive du réseau d'assets nécessite un écran plus large pour une expérience optimale. Veuillez utiliser un ordinateur de bureau ou une tablette en mode paysage.</p>
+              </div>
+              <div class="mt-4">
+                <div class="flex">
+                  <BaseButton variant="secondary" size="sm" @click="$router.push('/assets')">
+                    <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    Voir la liste des Assets
+                  </BaseButton>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -163,7 +195,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { Network } from 'vis-network'
 import { DataSet } from 'vis-data'
 import { useCMDBStore } from '@/stores/cmdb'
@@ -227,6 +259,13 @@ const paginatedRelationships = computed(() => {
 
 // Network visualization
 const initializeNetwork = async () => {
+  // Ne charger la visualisation que sur desktop (lg breakpoint et plus)
+  if (window.innerWidth < 1024) {
+    console.log('Skipping network initialization on mobile/tablet')
+    networkLoading.value = false
+    return
+  }
+  
   if (!networkContainer.value) {
     console.warn('Network container not available')
     networkLoading.value = false
@@ -503,7 +542,37 @@ const loadData = async () => {
 }
 
 // Lifecycle
+let handleResize: () => void
+
 onMounted(() => {
   loadData()
+  
+  // Listener pour redimensionnement de fenêtre
+  handleResize = () => {
+    // Si on passe de mobile à desktop ou vice-versa, recharger la visualisation
+    const isDesktop = window.innerWidth >= 1024
+    const hasNetwork = network.value !== null
+    
+    if (isDesktop && !hasNetwork && cis.value.length > 0) {
+      // Passer en mode desktop : initialiser le réseau
+      initializeNetwork()
+    } else if (!isDesktop && hasNetwork) {
+      // Passer en mode mobile : détruire le réseau
+      network.value.destroy()
+      network.value = null
+      networkLoading.value = false
+    }
+  }
+  
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  if (handleResize) {
+    window.removeEventListener('resize', handleResize)
+  }
+  if (network.value) {
+    network.value.destroy()
+  }
 })
 </script>
