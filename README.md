@@ -1,9 +1,10 @@
 # Constellation
-[![Status](https://img.shields.io/badge/status-in%20development-orange)]()
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 **Constellation** is a modern Configuration Management Database (CMDB) that uses graph technology to track and visualize all your organization's assets - from infrastructure and applications to people, processes, and policies.
+
+⚠️ Note: Constellation is currently under development and not production-ready.
 
 ## Quick Start
 
