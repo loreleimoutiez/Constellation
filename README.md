@@ -176,6 +176,14 @@ API_V1_STR=/api/v1
 ENVIRONMENT=development
 ```
 
+## Data isolation
+Each installation of Constellation runs fully locally inside Docker containers.
+All assets, relationships, and changes are stored in **local Docker volumes and do not affect other installations**.
+
+## Security Note
+Default credentials (neo4j/constellation123) are provided **for development and testing only**.
+For production or shared deployments, you must change these values in your .env file and configure secure credentials.
+
 ## Contributing
 
 We welcome contributions! Please:
