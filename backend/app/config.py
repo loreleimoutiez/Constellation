@@ -21,7 +21,11 @@ class Settings(BaseModel):
     
     # API Configuration
     api_prefix: str = "/api/v1"
-    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:8080"]
+    cors_origins: List[str] = [
+        "http://localhost:3000", 
+        "http://localhost:8080", 
+        "http://localhost:5173"  # Vite dev server
+    ]
     
     # Security
     secret_key: str = "your-secret-key-change-in-production"

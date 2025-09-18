@@ -52,8 +52,9 @@ class TestCriticalityLevel:
     
     def test_criticality_enum_membership(self):
         """Test criticality enum membership."""
-        assert "LOW" in CriticalityLevel
-        assert "INVALID" not in CriticalityLevel
+        assert CriticalityLevel.LOW in CriticalityLevel
+        assert "LOW" in [member.value for member in CriticalityLevel]
+        assert "INVALID" not in [member.value for member in CriticalityLevel]
 
 
 class TestEnvironmentType:

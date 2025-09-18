@@ -30,8 +30,9 @@ class TestCIType:
     
     def test_ci_type_enum_membership(self):
         """Test CI type enum membership."""
-        assert "HARDWARE" in CIType
-        assert "INVALID_TYPE" not in CIType
+        assert CIType.HARDWARE in CIType
+        assert "HARDWARE" in [member.value for member in CIType]
+        assert "INVALID_TYPE" not in [member.value for member in CIType]
 
 
 class TestCI:

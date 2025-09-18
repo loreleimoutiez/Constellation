@@ -175,7 +175,7 @@ class TestHumanAsset:
         repr_str = repr(human)
         assert "HumanAsset(" in repr_str
         assert "name='John Doe'" in repr_str
-        assert "status='ACTIVE'" in repr_str
+        assert "status='EmploymentStatus.ACTIVE'" in repr_str
     
     def test_human_asset_json_serialization(self):
         """Test HumanAsset JSON serialization."""

@@ -293,36 +293,34 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
+import { onMounted, onActivated, computed, nextTick } from 'vue'
 import { useCMDBStore } from '@/stores/cmdb'
 
 const cmdbStore = useCMDBStore()
 
-// Get reactive state from store
-const { 
-  cis, 
-  cisCount, 
-  criticalCIs, 
-  highCIs, 
-  relationships,
-  loading, 
-  error 
-} = cmdbStore
+// Use store properties directly to maintain reactivity
+const cis = computed(() => cmdbStore.cis)
+const cisCount = computed(() => cmdbStore.cisCount)
+const criticalCIs = computed(() => cmdbStore.criticalCIs)
+const highCIs = computed(() => cmdbStore.highCIs)
+const relationships = computed(() => cmdbStore.relationships)
+const loading = computed(() => cmdbStore.loading)
+const error = computed(() => cmdbStore.error)
 
 // Local computed properties
-const relationshipCount = computed(() => relationships.length)
+const relationshipCount = computed(() => relationships.value.length)
 
 const activeAssets = computed(() => {
-  return cis.filter(ci => ci.lifecycle_state === 'ACTIVE').length
+  return cis.value.filter(ci => ci.lifecycle_state === 'ACTIVE').length
 })
 
 const averageConnections = computed(() => {
-  if (cisCount === 0) return '0'
-  return (relationshipCount.value / cisCount).toFixed(1)
+  if (cisCount.value === 0) return '0'
+  return (relationshipCount.value / cisCount.value).toFixed(1)
 })
 
 const recentAssets = computed(() => {
-  return cis
+  return cis.value
     .slice()
     .sort((a, b) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime())
     .slice(0, 5)
@@ -330,20 +328,20 @@ const recentAssets = computed(() => {
 
 const assetTypeDistribution = computed(() => {
   const distribution: Record<string, number> = {}
-  cis.forEach(ci => {
+  cis.value.forEach(ci => {
     distribution[ci.ci_type] = (distribution[ci.ci_type] || 0) + 1
   })
   return distribution
 })
 
 const getCriticalPercentage = () => {
-  if (cisCount === 0) return 0
-  return Math.round((criticalCIs.length / cisCount) * 100)
+  if (cisCount.value === 0) return 0
+  return Math.round((criticalCIs.value.length / cisCount.value) * 100)
 }
 
 const getHighPercentage = () => {
-  if (cisCount === 0) return 0
-  return Math.round((highCIs.length / cisCount) * 100)
+  if (cisCount.value === 0) return 0
+  return Math.round((highCIs.value.length / cisCount.value) * 100)
 }
 
 const getCriticalityColor = (criticality?: string) => {
@@ -376,16 +374,28 @@ const formatDate = (dateString?: string) => {
 
 const refreshData = async () => {
   try {
-    await Promise.all([
-      cmdbStore.fetchCIs({ limit: 100 }),
-    ])
+    const apiResponse = await cmdbStore.fetchCIs({ limit: 100 })
   } catch (err) {
     console.error('Failed to refresh dashboard data:', err)
   }
 }
 
+const initializeData = async () => {
+  // Check if we already have data
+  if (cisCount.value === 0 || cis.value.length === 0) {
+    await refreshData()
+  }
+}
+
 // Load data on mount
 onMounted(async () => {
+  await nextTick() // Wait for DOM to be ready
+  await initializeData()
+})
+
+// Also refresh when component becomes active (when navigating back)
+onActivated(async () => {
+  // Always refresh on activation to ensure fresh data
   await refreshData()
 })
 </script>
