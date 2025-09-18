@@ -20,7 +20,7 @@
 
     <!-- Filters and Search -->
     <BaseCard>
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-6">
         <BaseInput
           v-model="searchQuery"
           placeholder="Search assets..."
@@ -37,11 +37,13 @@
           @change="handleFilterChange"
         >
           <option value="">All Types</option>
-          <option value="Hardware">Hardware</option>
-          <option value="Software">Software</option>
-          <option value="Service">Service</option>
-          <option value="Application">Application</option>
-          <option value="Endpoint">Endpoint</option>
+          <option value="APPLICATION">Application</option>
+          <option value="DATABASE">Database</option>
+          <option value="HARDWARE">Hardware</option>
+          <option value="NETWORK">Network</option>
+          <option value="SERVICE">Service</option>
+          <option value="STORAGE">Storage</option>
+          <option value="GENERIC">Generic</option>
         </select>
 
         <select
@@ -50,10 +52,34 @@
           @change="handleFilterChange"
         >
           <option value="">All Criticality</option>
-          <option value="Critical">Critical</option>
-          <option value="High">High</option>
-          <option value="Medium">Medium</option>
-          <option value="Low">Low</option>
+          <option value="CRITICAL">Critical</option>
+          <option value="HIGH">High</option>
+          <option value="MEDIUM">Medium</option>
+          <option value="LOW">Low</option>
+        </select>
+
+        <select
+          v-model="selectedEnvironment"
+          class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-constellation-500"
+          @change="handleFilterChange"
+        >
+          <option value="">All Environments</option>
+          <option value="PROD">Production</option>
+          <option value="STAGING">Staging</option>
+          <option value="DEV">Development</option>
+          <option value="TEST">Test</option>
+        </select>
+
+        <select
+          v-model="selectedLifecycleState"
+          class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-constellation-500"
+          @change="handleFilterChange"
+        >
+          <option value="">All States</option>
+          <option value="PLANNED">Planned</option>
+          <option value="ACTIVE">Active</option>
+          <option value="DEPRECATED">Deprecated</option>
+          <option value="RETIRED">Retired</option>
         </select>
 
         <BaseButton variant="secondary" @click="clearFilters">
@@ -61,6 +87,50 @@
         </BaseButton>
       </div>
     </BaseCard>
+
+    <!-- Bulk Actions Bar -->
+    <div v-if="selectedAssets.size > 0" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <span class="text-sm font-medium text-blue-900">
+            {{ selectedAssets.size }} asset(s) selected
+          </span>
+          <BaseButton variant="outline" size="sm" @click="clearSelection">
+            Clear Selection
+          </BaseButton>
+        </div>
+        
+        <div class="flex items-center space-x-2">
+          <select
+            v-model="bulkLifecycleState"
+            class="px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Change Status</option>
+            <option value="ACTIVE">Active</option>
+            <option value="PLANNED">Planned</option>
+            <option value="DEPRECATED">Deprecated</option>
+            <option value="RETIRED">Retired</option>
+          </select>
+          
+          <BaseButton
+            variant="secondary"
+            size="sm"
+            :disabled="!bulkLifecycleState"
+            @click="bulkUpdateStatus"
+          >
+            Update Status
+          </BaseButton>
+          
+          <BaseButton
+            variant="danger"
+            size="sm"
+            @click="confirmBulkDelete"
+          >
+            Delete Selected
+          </BaseButton>
+        </div>
+      </div>
+    </div>
 
     <!-- Assets Grid -->
     <div v-if="loading" class="text-center py-12">
@@ -82,23 +152,25 @@
         :key="asset.id"
         shadow="md"
         hover
+        :class="{ 'ring-2 ring-blue-500': selectedAssets.has(asset.id) }"
         @click="viewAsset(asset.id)"
       >
         <div class="space-y-4">
+          <!-- Selection Checkbox -->
+          <div class="flex items-center justify-start">
+            <input
+              type="checkbox"
+              :checked="selectedAssets.has(asset.id)"
+              @click.stop
+              @change="toggleAssetSelection(asset.id, $event)"
+              class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+          </div>
+
           <!-- Asset Header -->
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-              <component :is="getAssetIcon(asset.ci_type)" class="h-6 w-6 text-constellation-600" />
-              <span class="text-sm font-medium text-gray-600">{{ asset.ci_type }}</span>
-            </div>
-            <span
-              :class="[
-                'px-2 py-1 text-xs rounded-full',
-                getCriticalityClasses(asset.criticality)
-              ]"
-            >
-              {{ asset.criticality }}
-            </span>
+          <div class="flex items-center space-x-2">
+            <component :is="getAssetIcon(asset.ci_type)" class="h-6 w-6 text-constellation-600" />
+            <span class="text-sm font-medium text-gray-600">{{ asset.ci_type }}</span>
           </div>
 
           <!-- Asset Info -->
@@ -107,33 +179,49 @@
             <p class="text-sm text-gray-600 line-clamp-2">{{ asset.description }}</p>
           </div>
 
-          <!-- Asset Metadata -->
-          <div class="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span class="text-gray-500">Environment:</span>
-              <span class="ml-1 font-medium">{{ asset.environment || 'N/A' }}</span>
-            </div>
-            <div>
-              <span class="text-gray-500">Status:</span>
-              <span class="ml-1 font-medium">{{ asset.status || 'N/A' }}</span>
-            </div>
-          </div>
-
-          <!-- Asset Status -->
-          <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+          <!-- Asset Metadata as List -->
+          <div class="space-y-2">
+            <!-- Criticality -->
             <div class="flex items-center space-x-2">
-              <div
+              <span class="text-xs text-gray-500">Criticality:</span>
+              <span
                 :class="[
-                  'h-2 w-2 rounded-full',
-                  asset.status === 'Active' ? 'bg-green-500' :
-                  asset.status === 'Inactive' ? 'bg-gray-500' : 'bg-red-500'
+                  'px-2 py-1 text-xs rounded-full',
+                  getCriticalityClasses(asset.criticality)
                 ]"
-              ></div>
-              <span class="text-sm text-gray-600">{{ asset.status }}</span>
+              >
+                {{ asset.criticality }}
+              </span>
             </div>
-            <span class="text-xs text-gray-500">
-              {{ formatDate(asset.updated_at) }}
-            </span>
+            
+            <!-- Environment -->
+            <div class="flex items-center space-x-2">
+              <span class="text-xs text-gray-500">Environment:</span>
+              <span class="text-xs font-medium text-gray-700">{{ asset.environment || 'N/A' }}</span>
+            </div>
+            
+            <!-- Status -->
+            <div class="flex items-center space-x-2">
+              <span class="text-xs text-gray-500">Status:</span>
+              <div class="flex items-center space-x-1">
+                <div
+                  :class="[
+                    'h-2 w-2 rounded-full',
+                    asset.lifecycle_state === 'ACTIVE' ? 'bg-green-500' :
+                    asset.lifecycle_state === 'PLANNED' ? 'bg-blue-500' : 
+                    asset.lifecycle_state === 'DEPRECATED' ? 'bg-yellow-500' : 
+                    asset.lifecycle_state === 'RETIRED' ? 'bg-gray-500' : 'bg-gray-400'
+                  ]"
+                ></div>
+                <span class="text-xs font-medium text-gray-700">{{ asset.lifecycle_state }}</span>
+              </div>
+            </div>
+            
+            <!-- Date -->
+            <div class="flex items-center space-x-2">
+              <span class="text-xs text-gray-500">Updated:</span>
+              <span class="text-xs text-gray-600">{{ formatDate(asset.updated_at) }}</span>
+            </div>
           </div>
         </div>
       </BaseCard>
@@ -191,8 +279,14 @@ const loading = ref(false)
 const searchQuery = ref('')
 const selectedType = ref('')
 const selectedCriticality = ref('')
+const selectedEnvironment = ref('')
+const selectedLifecycleState = ref('')
 const currentPage = ref(1)
 const pageSize = ref(12)
+
+// Bulk actions
+const selectedAssets = ref(new Set<string>())
+const bulkLifecycleState = ref('')
 
 // Computed properties
 const filteredAssets = computed(() => {
@@ -218,6 +312,16 @@ const filteredAssets = computed(() => {
     assets = assets.filter(asset => asset.criticality === selectedCriticality.value)
   }
 
+  // Apply environment filter
+  if (selectedEnvironment.value) {
+    assets = assets.filter(asset => asset.environment === selectedEnvironment.value)
+  }
+
+  // Apply lifecycle state filter
+  if (selectedLifecycleState.value) {
+    assets = assets.filter(asset => asset.lifecycle_state === selectedLifecycleState.value)
+  }
+
   // Apply pagination
   const start = (currentPage.value - 1) * pageSize.value
   const end = start + pageSize.value
@@ -230,27 +334,33 @@ const totalPages = computed(() => Math.ceil(totalAssets.value / pageSize.value))
 // Methods
 const getAssetIcon = (type: string) => {
   const iconMap: Record<string, any> = {
-    Hardware: ServerIcon,
-    Software: CpuChipIcon,
-    Service: CloudIcon,
-    Application: ComputerDesktopIcon,
-    Endpoint: GlobeAltIcon,
+    APPLICATION: ComputerDesktopIcon,
+    DATABASE: ServerIcon,
+    HARDWARE: CpuChipIcon,
+    NETWORK: GlobeAltIcon,
+    SERVICE: CloudIcon,
+    STORAGE: ServerIcon,
+    GENERIC: ServerIcon,
   }
   return iconMap[type] || ServerIcon
 }
 
 const getCriticalityClasses = (criticality: string) => {
   const classMap: Record<string, string> = {
-    Critical: 'bg-red-100 text-red-800',
-    High: 'bg-orange-100 text-orange-800',
-    Medium: 'bg-yellow-100 text-yellow-800',
-    Low: 'bg-green-100 text-green-800',
+    CRITICAL: 'bg-red-100 text-red-800',
+    HIGH: 'bg-orange-100 text-orange-800',
+    MEDIUM: 'bg-yellow-100 text-yellow-800',
+    LOW: 'bg-green-100 text-green-800',
   }
   return classMap[criticality] || 'bg-gray-100 text-gray-800'
 }
 
 const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString()
+  return new Date(date).toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  })
 }
 
 const handleSearch = () => {
@@ -265,6 +375,8 @@ const clearFilters = () => {
   searchQuery.value = ''
   selectedType.value = ''
   selectedCriticality.value = ''
+  selectedEnvironment.value = ''
+  selectedLifecycleState.value = ''
   currentPage.value = 1
 }
 
@@ -287,8 +399,129 @@ const loadAssets = async () => {
   }
 }
 
+// Bulk actions functions
+const toggleAssetSelection = (assetId: string, event: Event) => {
+  const checkbox = event.target as HTMLInputElement
+  if (checkbox.checked) {
+    selectedAssets.value.add(assetId)
+  } else {
+    selectedAssets.value.delete(assetId)
+  }
+}
+
+const clearSelection = () => {
+  selectedAssets.value.clear()
+  bulkLifecycleState.value = ''
+}
+
+const bulkUpdateStatus = async () => {
+  if (!bulkLifecycleState.value || selectedAssets.value.size === 0) {
+    return
+  }
+
+  const confirmation = confirm(
+    `Are you sure you want to update ${selectedAssets.value.size} asset(s) to ${bulkLifecycleState.value}?`
+  )
+
+  if (!confirmation) return
+
+  try {
+    loading.value = true
+    
+    const selectedCount = selectedAssets.value.size
+    
+    // Update each selected asset
+    const updatePromises = Array.from(selectedAssets.value).map((assetId: string) => {
+      const asset = cmdbStore.cis.find(ci => ci.id === assetId)
+      if (asset) {
+        // Only send the minimal required fields plus the one we're changing
+        const updateData = {
+          name: asset.name,
+          ci_type: asset.ci_type,
+          lifecycle_state: bulkLifecycleState.value // This is what we're changing
+        }
+        return cmdbStore.updateCI(assetId, updateData)
+      }
+      return Promise.resolve()
+    })
+
+    await Promise.all(updatePromises.filter(Boolean))
+    
+    // Refresh the list
+    await cmdbStore.fetchCIs()
+    
+    // Clear selection
+    clearSelection()
+    
+    alert(`Successfully updated ${selectedCount} asset(s)`)
+  } catch (error: any) {
+    console.error('Failed to bulk update assets:', error)
+    console.error('Error response:', error.response?.data)
+    
+    let errorMessage = 'Failed to update assets. Please try again.'
+    if (error.response?.data?.detail) {
+      errorMessage = `Update failed: ${JSON.stringify(error.response.data.detail)}`
+    } else if (error.message) {
+      errorMessage = `Update failed: ${error.message}`
+    }
+    
+    alert(errorMessage)
+  } finally {
+    loading.value = false
+  }
+}
+
+const confirmBulkDelete = () => {
+  if (selectedAssets.value.size === 0) return
+
+  const confirmation = confirm(
+    `Are you sure you want to delete ${selectedAssets.value.size} asset(s)? This action cannot be undone.`
+  )
+
+  if (confirmation) {
+    bulkDeleteAssets()
+  }
+}
+
+const bulkDeleteAssets = async () => {
+  try {
+    loading.value = true
+    
+    const selectedCount = selectedAssets.value.size
+    
+    // Delete each selected asset
+    const deletePromises = Array.from(selectedAssets.value).map((assetId: string) => 
+      cmdbStore.deleteCI(assetId)
+    )
+
+    await Promise.all(deletePromises)
+    
+    // Refresh the list
+    await cmdbStore.fetchCIs()
+    
+    // Clear selection
+    clearSelection()
+    
+    alert(`Successfully deleted ${selectedCount} asset(s)`)
+  } catch (error: any) {
+    console.error('Failed to bulk delete assets:', error)
+    console.error('Error response:', error.response?.data)
+    
+    let errorMessage = 'Failed to delete assets. Please try again.'
+    if (error.response?.data?.detail) {
+      errorMessage = `Delete failed: ${JSON.stringify(error.response.data.detail)}`
+    } else if (error.message) {
+      errorMessage = `Delete failed: ${error.message}`
+    }
+    
+    alert(errorMessage)
+  } finally {
+    loading.value = false
+  }
+}
+
 // Watchers
-watch([selectedType, selectedCriticality], () => {
+watch([selectedType, selectedCriticality, selectedEnvironment, selectedLifecycleState], () => {
   currentPage.value = 1
 })
 
