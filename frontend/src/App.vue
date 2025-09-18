@@ -70,17 +70,19 @@
             </router-link>
 
             <router-link
-              to="/graph"
+              to="/relations"
               class="group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150"
-              :class="$route.path === '/graph' ? 'bg-primary-100 text-primary-700' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'"
+              :class="$route.path === '/relations' ? 'bg-primary-100 text-primary-700' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'"
               active-class="bg-primary-100 text-primary-700"
             >
               <svg class="mr-3 flex-shrink-0 w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <ellipse cx="12" cy="5" rx="9" ry="3" />
-                <path d="m21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                <circle cx="18" cy="5" r="3" />
+                <circle cx="6" cy="12" r="3" />
+                <circle cx="18" cy="19" r="3" />
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
               </svg>
-              <span v-if="!isSidebarCollapsed">Dependency Graph</span>
+              <span v-if="!isSidebarCollapsed">Relations</span>
             </router-link>
 
             <router-link
@@ -90,8 +92,11 @@
               active-class="bg-primary-100 text-primary-700"
             >
               <svg class="mr-3 flex-shrink-0 w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="m22 2-7 20-4-9-9-4Z" />
-                <path d="M22 2 11 13" />
+                <circle cx="12" cy="12" r="3" />
+                <circle cx="12" cy="12" r="6" />
+                <circle cx="12" cy="12" r="9" />
+                <path d="m6 6 12 12" />
+                <path d="m6 18 12-12" />
               </svg>
               <span v-if="!isSidebarCollapsed">Impact Analysis</span>
             </router-link>
@@ -124,8 +129,8 @@
               active-class="bg-primary-100 text-primary-700"
             >
               <svg class="mr-3 flex-shrink-0 w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
                 <circle cx="12" cy="12" r="3" />
-                <path d="m12 1 1.09 3.26L16 5l-1.74 2.91L17 9l-3.26 1.09L13 13l-2.91-1.74L9 17l-1.09-3.26L5 13l1.74-2.91L4 7l3.26-1.09L8 3l2.91 1.74Z" />
               </svg>
               <span v-if="!isSidebarCollapsed">Settings</span>
             </router-link>

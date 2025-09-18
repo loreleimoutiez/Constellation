@@ -30,9 +30,9 @@ const router = createRouter({
       component: () => import('../views/AssetFormView.vue'),
     },
     {
-      path: '/graph',
-      name: 'graph',
-      component: () => import('../views/GraphView.vue'),
+      path: '/relations',
+      name: 'relations',
+      component: () => import('../views/RelationsView.vue'),
     },
     {
       path: '/impact',
