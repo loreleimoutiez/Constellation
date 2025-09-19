@@ -13,6 +13,9 @@ neo4j==5.15.0
 # HTTP client for test scripts
 requests==2.32.5
 
+# Test data generation
+faker==24.4.0
+
 # Testing framework
 pytest==7.4.3
 pytest-asyncio==0.21.1

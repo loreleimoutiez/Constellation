@@ -27,6 +27,8 @@ make start-bg
 - **API Docs:** http://localhost:8000/docs  
 - **Neo4j Browser:** http://localhost:7474 (neo4j/constellation123)
 
+💡 **Want test data?** Run `make sample-data` to populate with 100+ realistic assets and relationships!
+
 ## Prerequisites
 
 - **Docker** and **Docker Compose** installed
@@ -157,6 +159,35 @@ Constellation models your infrastructure as interconnected nodes:
 make test           # Run API tests
 make test-frontend  # Run frontend tests
 ```
+
+### Sample Data for Testing
+
+Want to test with realistic data? Constellation includes a comprehensive test data script:
+
+```bash
+# Load sample CMDB data (servers, applications, people, relationships)
+make sample-data
+
+# Alternative: run script directly (requires Python dependencies)
+python create_complete_cmdb_data.py
+```
+
+This creates:
+- **100+ realistic assets** (servers, applications, databases, employees)
+- **120+ relationships** (dependencies, hosting, ownership, policies)
+- **Real-world scenarios** (AD dependencies, web stacks, team structures)
+- **Diverse asset types** (infrastructure, software, people, governance)
+
+Perfect for testing the network visualization, impact analysis, and relationship features!
+
+**Sample data includes:**
+- Infrastructure: Domain controllers, web servers, databases, storage
+- Applications: ERP systems, web applications, monitoring tools
+- People: IT teams, management, contractors with skills and responsibilities
+- Governance: Security policies, procedures, compliance frameworks
+- Realistic relationships: hosting, dependencies, ownership, governance
+
+**Detailed documentation:** See [SAMPLE_DATA.md](SAMPLE_DATA.md) for complete sample data guide.
 
 ### Test Architecture
 

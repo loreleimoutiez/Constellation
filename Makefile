@@ -238,7 +238,7 @@ db-reset: ## Reset Neo4j database (⚠️ DELETES ALL DATA)
 
 sample-data: ## Load sample CMDB data
 	@echo "📊 Loading sample data..."
-	@docker compose exec api python scripts/load_sample_data.py
+	@docker compose exec -T api python /app/create_complete_cmdb_data.py
 	@echo "✅ Sample data loaded"
 
 # Shell access
