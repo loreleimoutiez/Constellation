@@ -42,21 +42,25 @@
           @change="handleFilterChange"
         >
           <option value="">All Types</option>
-          <!-- Tangible Assets -->
-          <option value="APPLICATION">Application</option>
-          <option value="DATABASE">Database</option>
+          <!-- Infrastructure -->
           <option value="HARDWARE">Hardware</option>
+          <option value="SOFTWARE">Software</option>
           <option value="NETWORK">Network</option>
+          <!-- Applications and Services -->
+          <option value="APPLICATION">Application</option>
           <option value="SERVICE">Service</option>
-          <option value="STORAGE">Storage</option>
+          <option value="ENDPOINT">Endpoint</option>
+          <!-- Data and Content -->
+          <option value="DATASET">Dataset</option>
+          <option value="DATABASE">Database</option>
+          <!-- Physical and Location -->
+          <option value="LOCATION">Location</option>
+          <option value="FACILITY">Facility</option>
+          <!-- Security and Identity -->
+          <option value="IDENTITY">Identity/Person</option>
+          <option value="CREDENTIAL">Credential</option>
+          <!-- Generic -->
           <option value="GENERIC">Generic</option>
-          <!-- Intangible Assets -->
-          <option value="PERSON">Person</option>
-          <option value="POLICY">Policy</option>
-          <option value="LICENSE">License</option>
-          <option value="CONTRACT">Contract</option>
-          <option value="DOCUMENTATION">Documentation</option>
-          <option value="CERTIFICATE">Certificate</option>
         </select>
 
         <select
