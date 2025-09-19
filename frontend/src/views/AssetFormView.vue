@@ -596,6 +596,15 @@
             </div>
           </BaseCard>
 
+          <!-- Relations (only show in edit mode) -->
+          <BaseCard v-if="isEditing && route.params.id">
+            <template #header>
+              <h2 class="text-lg font-semibold text-gray-900">Asset Relations</h2>
+            </template>
+            
+            <RelationshipManager :asset-id="route.params.id as string" />
+          </BaseCard>
+
           <!-- Actions -->
           <BaseCard>
             <template #header>
@@ -743,6 +752,21 @@ const buttonVariant = computed(() => {
 })
 
 // Methods
+const getCategoryFromCiType = (ci_type: string): 'tangible' | 'intangible' => {
+  // Tangible CI types (physical/technical assets)
+  const tangibleTypes = [
+    'APPLICATION', 'DATABASE', 'HARDWARE', 'NETWORK', 
+    'SERVICE', 'STORAGE', 'GENERIC'
+  ]
+  
+  if (tangibleTypes.includes(ci_type)) {
+    return 'tangible'
+  }
+  
+  // Everything else is considered intangible
+  return 'intangible'
+}
+
 const onCategoryChange = () => {
   // Reset ci_type when category changes
   form.value.ci_type = ''
@@ -963,11 +987,16 @@ const loadAssetForEditing = async () => {
     const asset = cmdbStore.cis.find(ci => ci.id === assetId)
     
     if (asset) {
+      // Deduce category from ci_type
+      const deducedCategory = getCategoryFromCiType(asset.ci_type || '')
+      
       // Populate form with existing asset data
       form.value = {
         name: asset.name || '',
         description: asset.description || '',
+        category: asset.category || deducedCategory,  // Use existing category or deduce from ci_type
         ci_type: asset.ci_type || '',
+        intangible_type: asset.intangible_type || '',
         criticality: asset.criticality || 'MEDIUM',
         environment: asset.environment || 'PROD',
         lifecycle_state: asset.lifecycle_state || 'ACTIVE',
@@ -979,6 +1008,35 @@ const loadAssetForEditing = async () => {
         location: asset.location || '',
         monitoring_enabled: asset.monitoring_enabled ?? true,
         backup_enabled: asset.backup_enabled ?? false,
+        // Intangible asset specific fields
+        human_attributes: {
+          email: asset.human_attributes?.email || '',
+          department: asset.human_attributes?.department || '',
+          job_title: asset.human_attributes?.job_title || '',
+          manager: asset.human_attributes?.manager || '',
+          skills: asset.human_attributes?.skills || [],
+          certifications: asset.human_attributes?.certifications || [],
+          phone: asset.human_attributes?.phone || '',
+          employee_id: asset.human_attributes?.employee_id || ''
+        },
+        policy_attributes: {
+          policy_type: asset.policy_attributes?.policy_type || 'security',
+          approval_status: asset.policy_attributes?.approval_status || 'draft',
+          approval_date: asset.policy_attributes?.approval_date || '',
+          review_date: asset.policy_attributes?.review_date || '',
+          owner_department: asset.policy_attributes?.owner_department || '',
+          compliance_frameworks: asset.policy_attributes?.compliance_frameworks || []
+        },
+        license_attributes: {
+          license_type: asset.license_attributes?.license_type || '',
+          vendor: asset.license_attributes?.vendor || '',
+          license_key: asset.license_attributes?.license_key || '',
+          seats_total: asset.license_attributes?.seats_total || 0,
+          seats_used: asset.license_attributes?.seats_used || 0,
+          cost_per_seat: asset.license_attributes?.cost_per_seat || 0,
+          renewal_date: asset.license_attributes?.renewal_date || '',
+          support_level: asset.license_attributes?.support_level || ''
+        }
       }
     } else {
       // Asset not found
