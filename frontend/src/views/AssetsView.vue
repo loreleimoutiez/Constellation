@@ -102,6 +102,21 @@
         <BaseButton variant="secondary" @click="clearFilters">
           Clear Filters
         </BaseButton>
+        
+        <BaseButton 
+          v-if="allFilteredAssets.length > 0"
+          :variant="isAllSelected ? 'danger' : 'success'" 
+          size="sm"
+          @click="isAllSelected ? clearSelection() : selectAll()"
+        >
+          <svg v-if="!isAllSelected" class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+          </svg>
+          <svg v-else class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+          {{ isAllSelected ? `Deselect All (${selectedAssets.size})` : `Select All (${allFilteredAssets.length})` }}
+        </BaseButton>
       </div>
     </BaseCard>
 
@@ -130,7 +145,7 @@
           </select>
           
           <BaseButton
-            variant="secondary"
+            variant="success"
             size="sm"
             :disabled="!bulkLifecycleState"
             @click="bulkUpdateStatus"
@@ -272,6 +287,17 @@
       </div>
     </div>
   </div>
+
+  <!-- Delete Confirmation Modal -->
+  <ConfirmDeleteModal
+    :is-open="showDeleteModal"
+    :title="deleteModalTitle"
+    :message="deleteModalMessage"
+    :details="deleteModalDetails"
+    confirm-text="Delete"
+    @confirm="handleConfirmDelete"
+    @close="closeDeleteModal"
+  />
 </template>
 
 <script setup lang="ts">
@@ -281,6 +307,7 @@ import { useCMDBStore } from '@/stores/cmdb'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
+import ConfirmDeleteModal from '@/components/ConfirmDeleteModal.vue'
 import {
   MagnifyingGlassIcon,
   ServerIcon,
@@ -308,8 +335,14 @@ const pageSize = ref(12)
 const selectedAssets = ref(new Set<string>())
 const bulkLifecycleState = ref('')
 
+// Delete modal
+const showDeleteModal = ref(false)
+const deleteModalTitle = ref('')
+const deleteModalMessage = ref('')
+const deleteModalDetails = ref('')
+
 // Computed properties
-const filteredAssets = computed(() => {
+const allFilteredAssets = computed(() => {
   let assets = cmdbStore.cis
 
   // Apply search filter
@@ -342,13 +375,17 @@ const filteredAssets = computed(() => {
     assets = assets.filter(asset => asset.lifecycle_state === selectedLifecycleState.value)
   }
 
-  // Apply pagination
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return assets.slice(start, end)
+  return assets
 })
 
-const totalAssets = computed(() => cmdbStore.cis.length)
+const filteredAssets = computed(() => {
+  // Apply pagination to all filtered assets
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return allFilteredAssets.value.slice(start, end)
+})
+
+const totalAssets = computed(() => allFilteredAssets.value.length)
 const totalPages = computed(() => Math.ceil(totalAssets.value / pageSize.value))
 
 // Methods
@@ -430,6 +467,17 @@ const clearSelection = () => {
   bulkLifecycleState.value = ''
 }
 
+const selectAll = () => {
+  allFilteredAssets.value.forEach(asset => {
+    selectedAssets.value.add(asset.id)
+  })
+}
+
+const isAllSelected = computed(() => {
+  return allFilteredAssets.value.length > 0 && 
+         allFilteredAssets.value.every(asset => selectedAssets.value.has(asset.id))
+})
+
 const bulkUpdateStatus = async () => {
   if (!bulkLifecycleState.value || selectedAssets.value.size === 0) {
     return
@@ -490,13 +538,27 @@ const bulkUpdateStatus = async () => {
 const confirmBulkDelete = () => {
   if (selectedAssets.value.size === 0) return
 
-  const confirmation = confirm(
-    `Are you sure you want to delete ${selectedAssets.value.size} asset(s)? This action cannot be undone.`
-  )
-
-  if (confirmation) {
-    bulkDeleteAssets()
+  deleteModalTitle.value = 'Delete Assets'
+  deleteModalMessage.value = `Are you sure you want to delete ${selectedAssets.value.size} asset(s)?`
+  
+  if (selectedAssets.value.size === allFilteredAssets.value.length && allFilteredAssets.value.length > 1) {
+    deleteModalDetails.value = 'You are about to delete ALL visible assets. This action cannot be undone.'
+  } else if (selectedAssets.value.size > 10) {
+    deleteModalDetails.value = `You are deleting a large number of assets (${selectedAssets.value.size}). This action cannot be undone.`
+  } else {
+    deleteModalDetails.value = 'This action cannot be undone.'
   }
+  
+  showDeleteModal.value = true
+}
+
+const handleConfirmDelete = () => {
+  showDeleteModal.value = false
+  bulkDeleteAssets()
+}
+
+const closeDeleteModal = () => {
+  showDeleteModal.value = false
 }
 
 const bulkDeleteAssets = async () => {
