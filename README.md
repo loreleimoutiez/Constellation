@@ -1,6 +1,6 @@
 # Constellation
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **Constellation** is a modern Configuration Management Database (CMDB) that uses graph technology to track and visualize all your organization's assets - from infrastructure and applications to people, processes, and policies.
 
@@ -196,7 +196,7 @@ We welcome contributions! Please:
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Links
 
