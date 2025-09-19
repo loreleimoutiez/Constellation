@@ -2,7 +2,12 @@
 Neo4j database connection and session management.
 """
 import logging
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, cast, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from neo4j import Query
+else:
+    Query = str
 from contextlib import asynccontextmanager
 
 from neo4j import GraphDatabase, Driver
@@ -95,7 +100,7 @@ class Neo4jConnection:
         
         async with self.get_session() as session:
             try:
-                result = session.run(query, parameters or {})
+                result = session.run(query, parameters or {})  # type: ignore[arg-type]
                 return [record.data() for record in result]
             except Exception as e:
                 logger.error(f"Query execution failed: {e}")

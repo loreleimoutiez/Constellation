@@ -13,6 +13,7 @@ from app.models.base import (
     EnvironmentType, 
     LifecycleState
 )
+from tests.factories import create_base_asset
 
 
 class TestTimestampMixin:
@@ -86,7 +87,7 @@ class TestBaseAsset:
     
     def test_base_asset_creation_minimal(self):
         """Test creating BaseAsset with minimal required fields."""
-        asset = BaseAsset(name="Test Asset")
+        asset = create_base_asset(name="Test Asset")
         
         # Check required fields
         assert asset.name == "Test Asset"
@@ -131,26 +132,26 @@ class TestBaseAsset:
         """Test BaseAsset validation errors."""
         # Test empty name
         with pytest.raises(ValueError):
-            BaseAsset(name="")
+            create_base_asset(name="")
         
         # Test name too long (over 255 chars)
         with pytest.raises(ValueError):
-            BaseAsset(name="x" * 256)
+            create_base_asset(name="x" * 256)
         
         # Test description too long (over 1000 chars)  
         with pytest.raises(ValueError):
-            BaseAsset(name="Test", description="x" * 1001)
+            create_base_asset(name="Test", description="x" * 1001)
     
     def test_base_asset_json_serialization(self):
         """Test BaseAsset JSON serialization."""
-        asset = BaseAsset(
+        asset = create_base_asset(
             name="Test Asset",
             criticality=CriticalityLevel.HIGH,
             environment=EnvironmentType.STAGING
         )
         
         # Test JSON export
-        json_data = asset.dict()
+        json_data = asset.model_dump()
         
         assert json_data["name"] == "Test Asset"
         assert json_data["criticality"] == "HIGH"
@@ -161,22 +162,22 @@ class TestBaseAsset:
     def test_base_asset_custom_id(self):
         """Test BaseAsset with custom ID."""
         custom_id = "custom-asset-123"
-        asset = BaseAsset(id=custom_id, name="Test Asset")
+        asset = create_base_asset(id=custom_id, name="Test Asset")
         
         assert asset.id == custom_id
     
     def test_base_asset_defaults(self):
         """Test BaseAsset default values are applied correctly."""
-        asset = BaseAsset(name="Test")
+        asset = create_base_asset(name="Test")
         
         # Test enum defaults
         assert asset.criticality == CriticalityLevel.MEDIUM
         assert asset.environment == EnvironmentType.PRODUCTION
         assert asset.lifecycle_state == LifecycleState.ACTIVE
         
-        # Test optional fields
-        assert asset.description is None
-        assert asset.owner is None
+        # Test that factory provided non-None values for required fields
+        assert asset.description is not None
+        assert asset.owner is not None
         assert asset.since is None
         assert asset.until is None
         

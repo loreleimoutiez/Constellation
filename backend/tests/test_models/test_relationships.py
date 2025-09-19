@@ -7,12 +7,11 @@ from datetime import datetime
 from uuid import uuid4
 
 from app.models.relationships import (
-    Relationship, 
-    RelationshipType, 
+    Relationship,
+    RelationshipType,
     RelationshipStrength
 )
-
-
+from tests.factories import create_relationship
 class TestRelationshipType:
     """Test RelationshipType enum."""
     
@@ -179,7 +178,7 @@ class TestRelationship:
         ]
         
         for rel_type in bidirectional_types:
-            rel = Relationship(
+            rel = create_relationship(
                 source_id=source_id,
                 target_id=target_id,
                 relationship_type=rel_type
@@ -195,7 +194,7 @@ class TestRelationship:
         ]
         
         for rel_type in unidirectional_types:
-            rel = Relationship(
+            rel = create_relationship(
                 source_id=source_id,
                 target_id=target_id,
                 relationship_type=rel_type
@@ -207,7 +206,7 @@ class TestRelationship:
         rel = Relationship(**sample_relationship_data)
         
         # Test JSON export
-        json_data = rel.dict()
+        json_data = rel.model_dump()
         
         assert json_data["source_id"] == sample_relationship_data["source_id"]
         assert json_data["target_id"] == sample_relationship_data["target_id"]
@@ -222,7 +221,7 @@ class TestRelationship:
         source_id = str(uuid4())
         target_id = str(uuid4())
         
-        rel = Relationship(
+        rel = create_relationship(
             source_id=source_id,
             target_id=target_id,
             relationship_type=RelationshipType.CONNECTS_TO,
@@ -245,7 +244,7 @@ class TestRelationship:
         source_id = str(uuid4())
         target_id = str(uuid4())
         
-        rel = Relationship(
+        rel = create_relationship(
             source_id=source_id,
             target_id=target_id,
             relationship_type=RelationshipType.USES,

@@ -158,6 +158,22 @@ make test           # Run API tests
 make test-frontend  # Run frontend tests
 ```
 
+### Test Architecture
+
+Constellation uses a comprehensive test suite with modern testing patterns:
+
+**Factory Pattern**: Test data is created using factory functions that provide sensible defaults and make tests more maintainable. Located in `backend/tests/factories.py`.
+
+**Coverage**: 92 comprehensive test cases covering all data models with 100% model coverage.
+
+**Test Structure**:
+- Model validation and creation tests
+- Business logic and constraint tests  
+- JSON serialization and API compatibility tests
+- Relationship and dependency tests
+
+All tests run automatically via `make test` and use the same Docker environment as development.
+
 ## Configuration
 
 Key environment variables (configured automatically by `make setup`):

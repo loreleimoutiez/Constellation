@@ -8,7 +8,7 @@ specialized variants for different asset categories.
 from enum import Enum
 from typing import Optional, Dict, Any
 
-from pydantic import Field
+from pydantic import Field, ConfigDict
 
 from .base import BaseAsset
 
@@ -80,9 +80,7 @@ class CI(BaseAsset):
     # Flexible attributes for extensibility
     custom_attributes: Dict[str, Any] = Field(default_factory=dict, description="Custom key-value attributes")
     
-    class Config:
-        """Pydantic configuration."""
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
         
     def __str__(self) -> str:
         """String representation."""

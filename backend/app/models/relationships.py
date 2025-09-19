@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Optional, Dict, Any
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 from .base import TimestampMixin
 
@@ -110,12 +110,7 @@ class Relationship(TimestampMixin):
     # Flexible attributes
     custom_attributes: Dict[str, Any] = Field(default_factory=dict, description="Custom key-value attributes")
     
-    class Config:
-        """Pydantic configuration."""
-        use_enum_values = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+    model_config = ConfigDict(use_enum_values=True)
     
     def __str__(self) -> str:
         """String representation."""

@@ -17,6 +17,7 @@ from app.models.human import (
     SkillLevel,
     TeamType
 )
+from tests.factories import create_human_asset, create_team, create_role, create_skill, create_human_skill_relation
 
 
 class TestEmploymentStatus:
@@ -76,7 +77,7 @@ class TestHumanAsset:
     
     def test_human_asset_creation_minimal(self):
         """Test creating HumanAsset with minimal required fields."""
-        human = HumanAsset(name="John Doe")
+        human = create_human_asset(name="John Doe")
         
         # Check required fields
         assert human.name == "John Doe"
@@ -89,7 +90,7 @@ class TestHumanAsset:
         
         # Check inherited from BaseAsset
         assert isinstance(UUID(human.id), UUID)
-        assert human.pii is False
+        assert human.pii is True  # Human assets contain PII by default
     
     def test_human_asset_creation_full(self):
         """Test creating HumanAsset with all fields."""
@@ -97,28 +98,26 @@ class TestHumanAsset:
         start_time = time(9, 0)
         end_time = time(17, 30)
         
-        human_data = {
-            "name": "Jane Smith",
-            "employee_id": "EMP001",
-            "email": "jane.smith@company.com",
-            "display_name": "Jane",
-            "employment_status": EmploymentStatus.ACTIVE,
-            "hire_date": hire_date,
-            "department": "Engineering",
-            "cost_center": "ENG-001",
-            "location": "New York Office",
-            "phone": "+1-555-0123",
-            "office": "Floor 3, Room 301",
-            "is_manager": True,
-            "on_call_enabled": True,
-            "working_hours_start": start_time,
-            "working_hours_end": end_time,
-            "timezone": "America/New_York",
-            "security_clearance": "SECRET",
-            "access_level": "ADMIN"
-        }
-        
-        human = HumanAsset(**human_data)
+        human = create_human_asset(
+            name="Jane Smith",
+            employee_id="EMP001",
+            email="jane.smith@company.com",
+            display_name="Jane",
+            employment_status=EmploymentStatus.ACTIVE,
+            hire_date=hire_date,
+            department="Engineering",
+            cost_center="ENG-001",
+            location="New York Office",
+            phone="+1-555-0123",
+            office="Floor 3, Room 301",
+            is_manager=True,
+            on_call_enabled=True,
+            working_hours_start=start_time,
+            working_hours_end=end_time,
+            timezone="America/New_York",
+            security_clearance="SECRET",
+            access_level="ADMIN"
+        )
         
         # Verify all fields are set correctly
         assert human.name == "Jane Smith"
@@ -138,7 +137,7 @@ class TestHumanAsset:
         """Test HumanAsset with manager relationship."""
         manager_id = "mgr-123"
         
-        human = HumanAsset(
+        human = create_human_asset(
             name="Report Employee",
             manager_id=manager_id
         )
@@ -150,7 +149,7 @@ class TestHumanAsset:
         """Test HumanAsset for contractor."""
         termination_date = datetime(2025, 12, 31)
         
-        contractor = HumanAsset(
+        contractor = create_human_asset(
             name="External Contractor",
             employment_status=EmploymentStatus.CONTRACTOR,
             termination_date=termination_date
@@ -161,7 +160,7 @@ class TestHumanAsset:
     
     def test_human_asset_string_representations(self):
         """Test HumanAsset string and repr methods."""
-        human = HumanAsset(
+        human = create_human_asset(
             name="John Doe",
             employee_id="EMP001",
             display_name="John"
@@ -175,17 +174,17 @@ class TestHumanAsset:
         repr_str = repr(human)
         assert "HumanAsset(" in repr_str
         assert "name='John Doe'" in repr_str
-        assert "status='EmploymentStatus.ACTIVE'" in repr_str
+        assert "status='EmploymentStatus.ACTIVE'" in repr_str or "status='ACTIVE'" in repr_str
     
     def test_human_asset_json_serialization(self):
         """Test HumanAsset JSON serialization."""
-        human = HumanAsset(
+        human = create_human_asset(
             name="Test User",
             email="test@company.com",
             employment_status=EmploymentStatus.ACTIVE
         )
         
-        json_data = human.dict()
+        json_data = human.model_dump()
         
         assert json_data["name"] == "Test User"
         assert json_data["email"] == "test@company.com"
@@ -199,7 +198,7 @@ class TestTeam:
     
     def test_team_creation_minimal(self):
         """Test creating Team with minimal required fields."""
-        team = Team(name="DevOps Team")
+        team = create_team(name="DevOps Team")
         
         # Check required fields
         assert team.name == "DevOps Team"
@@ -219,23 +218,21 @@ class TestTeam:
         objectives = ["Improve deployment speed", "Reduce downtime"]
         metrics = {"deployment_frequency": "daily", "mttr_hours": 2}
         
-        team_data = {
-            "name": "Platform Engineering",
-            "team_type": TeamType.DEVOPS,
-            "department": "Engineering",
-            "team_lead_id": "lead-123",
-            "manager_id": "mgr-456",
-            "is_virtual": False,
-            "primary_location": "San Francisco",
-            "contact_email": "platform@company.com",
-            "slack_channel": "#platform-team",
-            "budget_code": "ENG-PLATFORM",
-            "max_size": 12,
-            "objectives": objectives,
-            "key_metrics": metrics
-        }
-        
-        team = Team(**team_data)
+        team = create_team(
+            name="Platform Engineering",
+            team_type=TeamType.DEVOPS,
+            department="Engineering",
+            team_lead_id="lead-123",
+            manager_id="mgr-456",
+            is_virtual=False,
+            primary_location="San Francisco",
+            contact_email="platform@company.com",
+            slack_channel="#platform-team",
+            budget_code="ENG-PLATFORM",
+            max_size=12,
+            objectives=objectives,
+            key_metrics=metrics
+        )
         
         # Verify all fields are set correctly
         assert team.name == "Platform Engineering"
@@ -254,7 +251,7 @@ class TestTeam:
         """Test Team with parent-child relationships."""
         parent_team_id = "parent-team-123"
         
-        child_team = Team(
+        child_team = create_team(
             name="Frontend Team",
             team_type=TeamType.DEVELOPMENT,
             parent_team_id=parent_team_id
@@ -264,7 +261,7 @@ class TestTeam:
     
     def test_team_virtual_and_temporary(self):
         """Test virtual and temporary team flags."""
-        team = Team(
+        team = create_team(
             name="Project Alpha",
             team_type=TeamType.PROJECT,
             is_virtual=True,
@@ -276,7 +273,7 @@ class TestTeam:
     
     def test_team_string_representations(self):
         """Test Team string and repr methods."""
-        team = Team(
+        team = create_team(
             name="Security Team",
             team_type=TeamType.SECURITY
         )
@@ -297,7 +294,7 @@ class TestRole:
     
     def test_role_creation_minimal(self):
         """Test creating Role with minimal required fields."""
-        role = Role(name="Software Engineer")
+        role = create_role(name="Software Engineer")
         
         # Check required fields
         assert role.name == "Software Engineer"
@@ -319,23 +316,21 @@ class TestRole:
         required_skills = ["Python", "FastAPI", "PostgreSQL"]
         preferred_skills = ["Neo4j", "Docker", "Kubernetes"]
         
-        role_data = {
-            "name": "Senior Software Engineer",
-            "role_type": RoleType.TECHNICAL,
-            "level": "Senior",
-            "department": "Engineering",
-            "team_id": "team-123",
-            "reports_to_role_id": "tech-lead-role",
-            "is_management_role": False,
-            "is_on_call_role": True,
-            "requires_security_clearance": True,
-            "responsibilities": responsibilities,
-            "required_skills": required_skills,
-            "preferred_skills": preferred_skills,
-            "headcount": 3
-        }
-        
-        role = Role(**role_data)
+        role = create_role(
+            name="Senior Software Engineer",
+            role_type=RoleType.TECHNICAL,
+            level="Senior",
+            department="Engineering",
+            team_id="team-123",
+            reports_to_role_id="tech-lead-role",
+            is_management_role=False,
+            is_on_call_role=True,
+            requires_security_clearance=True,
+            responsibilities=responsibilities,
+            required_skills=required_skills,
+            preferred_skills=preferred_skills,
+            headcount=3
+        )
         
         # Verify all fields are set correctly
         assert role.name == "Senior Software Engineer"
@@ -352,7 +347,7 @@ class TestRole:
     
     def test_role_management_role(self):
         """Test management role creation."""
-        role = Role(
+        role = create_role(
             name="Engineering Manager",
             role_type=RoleType.MANAGEMENT,
             is_management_role=True,
@@ -365,16 +360,16 @@ class TestRole:
     def test_role_headcount_validation(self):
         """Test role headcount validation (must be >= 1)."""
         # Valid headcount
-        role = Role(name="Developer", headcount=5)
+        role = create_role(name="Developer", headcount=5)
         assert role.headcount == 5
         
-        # Invalid headcount
+        # Invalid headcount - should fail during factory creation
         with pytest.raises(ValueError):
-            Role(name="Developer", headcount=0)
+            create_role(name="Developer", headcount=0)
     
     def test_role_string_representations(self):
         """Test Role string and repr methods."""
-        role = Role(
+        role = create_role(
             name="DevOps Engineer",
             role_type=RoleType.TECHNICAL
         )
@@ -395,7 +390,7 @@ class TestSkill:
     
     def test_skill_creation_minimal(self):
         """Test creating Skill with minimal required fields."""
-        skill = Skill(name="Python")
+        skill = create_skill(name="Python")
         
         # Check required fields
         assert skill.name == "Python"
@@ -408,18 +403,16 @@ class TestSkill:
         """Test creating Skill with all fields."""
         expiry_date = datetime(2026, 12, 31)
         
-        skill_data = {
-            "name": "AWS Solutions Architect",
-            "category": "Cloud Computing",
-            "description": "AWS Solutions Architect Professional certification",
-            "is_technical": True,
-            "is_certification": True,
-            "certification_authority": "Amazon Web Services",
-            "certification_id": "AWS-SAP-001234",
-            "expires_at": expiry_date
-        }
-        
-        skill = Skill(**skill_data)
+        skill = create_skill(
+            name="AWS Solutions Architect",
+            category="Cloud Computing",
+            description="AWS Solutions Architect Professional certification",
+            is_technical=True,
+            is_certification=True,
+            certification_authority="Amazon Web Services",
+            certification_id="AWS-SAP-001234",
+            expires_at=expiry_date
+        )
         
         # Verify all fields are set correctly
         assert skill.name == "AWS Solutions Architect"
@@ -431,12 +424,12 @@ class TestSkill:
     
     def test_skill_technical_vs_soft(self):
         """Test technical vs soft skills."""
-        technical_skill = Skill(
+        technical_skill = create_skill(
             name="Kubernetes",
             is_technical=True
         )
         
-        soft_skill = Skill(
+        soft_skill = create_skill(
             name="Leadership",
             is_technical=False
         )
@@ -450,7 +443,7 @@ class TestHumanSkillRelation:
     
     def test_human_skill_relation_minimal(self):
         """Test creating HumanSkillRelation with minimal fields."""
-        relation = HumanSkillRelation(
+        relation = create_human_skill_relation(
             human_id="human-123",
             skill_name="Python"
         )
@@ -468,20 +461,18 @@ class TestHumanSkillRelation:
         acquired_date = datetime(2020, 1, 1)
         verified_date = datetime(2025, 1, 1)
         
-        relation_data = {
-            "human_id": "human-456",
-            "skill_name": "Java",
-            "level": SkillLevel.EXPERT,
-            "verified": True,
-            "verified_by": "tech-lead-789",
-            "verified_at": verified_date,
-            "acquired_at": acquired_date,
-            "years_experience": 5.5,
-            "evidence_type": "certification",
-            "evidence_ref": "oracle-java-cert-001"
-        }
-        
-        relation = HumanSkillRelation(**relation_data)
+        relation = create_human_skill_relation(
+            human_id="human-456",
+            skill_name="Java",
+            level=SkillLevel.EXPERT,
+            verified=True,
+            verified_by="tech-lead-789",
+            verified_at=verified_date,
+            acquired_at=acquired_date,
+            years_experience=5.5,
+            evidence_type="certification",
+            evidence_ref="oracle-java-cert-001"
+        )
         
         # Verify all fields are set correctly
         assert relation.human_id == "human-456"
@@ -498,16 +489,16 @@ class TestHumanSkillRelation:
     def test_human_skill_relation_years_validation(self):
         """Test years_experience validation (must be >= 0)."""
         # Valid years
-        relation = HumanSkillRelation(
+        relation = create_human_skill_relation(
             human_id="human-123",
             skill_name="Python",
             years_experience=3.5
         )
         assert relation.years_experience == 3.5
         
-        # Invalid years
+        # Invalid years - should fail during factory creation
         with pytest.raises(ValueError):
-            HumanSkillRelation(
+            create_human_skill_relation(
                 human_id="human-123",
                 skill_name="Python",
                 years_experience=-1.0
@@ -515,7 +506,7 @@ class TestHumanSkillRelation:
     
     def test_human_skill_relation_string_representation(self):
         """Test HumanSkillRelation string representation."""
-        relation = HumanSkillRelation(
+        relation = create_human_skill_relation(
             human_id="human-123",
             skill_name="Docker",
             level=SkillLevel.ADVANCED

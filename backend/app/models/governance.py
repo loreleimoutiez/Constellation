@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
-from pydantic import Field, HttpUrl
+from pydantic import Field, HttpUrl, ConfigDict
 
 from .base import BaseAsset, TimestampMixin
 
@@ -108,7 +108,7 @@ class Policy(BaseAsset):
     
     # Policy metadata
     policy_number: Optional[str] = Field(None, description="Official policy number")
-    version: str = Field("1.0", description="Policy version")
+    policy_version: str = Field("1.0", description="Policy version")
     
     # Approval and authority
     approved_by: Optional[str] = Field(None, description="Who approved this policy")
@@ -135,12 +135,7 @@ class Policy(BaseAsset):
     document_url: Optional[HttpUrl] = Field(None, description="Link to full policy document")
     training_required: bool = Field(False, description="Whether training is required")
     
-    class Config:
-        """Pydantic configuration."""
-        use_enum_values = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+    model_config = ConfigDict(use_enum_values=True)
     
     def __str__(self) -> str:
         """String representation."""
@@ -191,12 +186,7 @@ class Risk(BaseAsset):
     residual_impact: Optional[int] = Field(None, ge=1, le=5, description="Residual impact after controls")
     residual_score: Optional[float] = Field(None, description="Residual risk score")
     
-    class Config:
-        """Pydantic configuration."""
-        use_enum_values = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+    model_config = ConfigDict(use_enum_values=True)
     
     def __str__(self) -> str:
         """String representation."""
@@ -217,7 +207,7 @@ class Process(BaseAsset):
     
     # Process metadata
     process_id: Optional[str] = Field(None, description="Official process ID")
-    version: str = Field("1.0", description="Process version")
+    process_version: str = Field("1.0", description="Process version")
     
     # Process details
     purpose: Optional[str] = Field(None, max_length=1000, description="Process purpose")
@@ -251,12 +241,7 @@ class Process(BaseAsset):
     next_review: Optional[datetime] = Field(None, description="Next review date")
     improvement_opportunities: List[str] = Field(default_factory=list, description="Improvement opportunities")
     
-    class Config:
-        """Pydantic configuration."""
-        use_enum_values = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+    model_config = ConfigDict(use_enum_values=True)
     
     def __str__(self) -> str:
         """String representation."""
@@ -302,12 +287,7 @@ class Control(BaseAsset):
     control_owner: Optional[str] = Field(None, description="Control owner ID")
     responsible_party: Optional[str] = Field(None, description="Responsible party ID")
     
-    class Config:
-        """Pydantic configuration."""
-        use_enum_values = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+    model_config = ConfigDict(use_enum_values=True)
     
     def __str__(self) -> str:
         """String representation."""
@@ -360,12 +340,7 @@ class Vendor(BaseAsset):
     sla_compliance: Optional[float] = Field(None, ge=0, le=100, description="SLA compliance percentage")
     performance_rating: Optional[str] = Field(None, description="Overall performance rating")
     
-    class Config:
-        """Pydantic configuration."""
-        use_enum_values = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+    model_config = ConfigDict(use_enum_values=True)
     
     def __str__(self) -> str:
         """String representation."""
@@ -410,11 +385,7 @@ class Contract(BaseAsset):
     auto_renewal: bool = Field(False, description="Whether contract auto-renews")
     renewal_period: Optional[str] = Field(None, description="Auto-renewal period")
     
-    class Config:
-        """Pydantic configuration."""
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+    model_config = ConfigDict()
     
     def __str__(self) -> str:
         """String representation."""

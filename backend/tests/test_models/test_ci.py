@@ -7,6 +7,7 @@ from uuid import UUID
 
 from app.models.ci import CI, CIType
 from app.models.base import CriticalityLevel, EnvironmentType
+from tests.factories import create_ci
 
 
 class TestCIType:
@@ -40,7 +41,7 @@ class TestCI:
     
     def test_ci_creation_minimal(self, sample_ci_data):
         """Test creating CI with minimal required fields."""
-        ci = CI(name="Test CI")
+        ci = create_ci(name="Test CI")
         
         # Check required fields
         assert ci.name == "Test CI"
@@ -60,7 +61,7 @@ class TestCI:
     
     def test_ci_creation_full(self, sample_ci_data):
         """Test creating CI with all fields."""
-        ci = CI(**sample_ci_data)
+        ci = create_ci(**sample_ci_data)
         
         # Verify all fields are set correctly
         assert ci.name == sample_ci_data["name"]
@@ -75,15 +76,13 @@ class TestCI:
     
     def test_ci_with_network_details(self):
         """Test CI with network-specific details."""
-        ci_data = {
-            "name": "Web Server",
-            "ci_type": CIType.HARDWARE,
-            "hostname": "web01.example.com",
-            "ip_address": "10.0.1.100",
-            "fqdn": "web01.prod.example.com"
-        }
-        
-        ci = CI(**ci_data)
+        ci = create_ci(
+            name="Web Server",
+            ci_type=CIType.HARDWARE,
+            hostname="web01.example.com",
+            ip_address="10.0.1.100",
+            fqdn="web01.prod.example.com"
+        )
         
         assert ci.hostname == "web01.example.com"
         assert ci.ip_address == "10.0.1.100"
@@ -91,15 +90,13 @@ class TestCI:
     
     def test_ci_with_physical_details(self):
         """Test CI with physical location details."""
-        ci_data = {
-            "name": "Database Server",
-            "ci_type": CIType.HARDWARE,
-            "location": "Datacenter A",
-            "rack_position": "R42-U10",
-            "asset_tag": "ASSET-001234"
-        }
-        
-        ci = CI(**ci_data)
+        ci = create_ci(
+            name="Database Server",
+            ci_type=CIType.HARDWARE,
+            location="Datacenter A",
+            rack_position="R42-U10",
+            asset_tag="ASSET-001234"
+        )
         
         assert ci.location == "Datacenter A"
         assert ci.rack_position == "R42-U10"
@@ -107,14 +104,12 @@ class TestCI:
     
     def test_ci_with_operational_flags(self):
         """Test CI with operational configuration."""
-        ci_data = {
-            "name": "Monitoring Server",
-            "monitoring_enabled": False,
-            "backup_enabled": True,
-            "status": "ACTIVE"
-        }
-        
-        ci = CI(**ci_data)
+        ci = create_ci(
+            name="Monitoring Server",
+            monitoring_enabled=False,
+            backup_enabled=True,
+            status="ACTIVE"
+        )
         
         assert ci.monitoring_enabled is False
         assert ci.backup_enabled is True
@@ -122,14 +117,12 @@ class TestCI:
     
     def test_ci_with_compliance_tags(self):
         """Test CI with compliance and governance data."""
-        ci_data = {
-            "name": "PII Database",
-            "pii": True,
-            "compliance_tags": ["GDPR", "HIPAA", "SOX"],
-            "cost_center": "IT-001"
-        }
-        
-        ci = CI(**ci_data)
+        ci = create_ci(
+            name="PII Database",
+            pii=True,
+            compliance_tags=["GDPR", "HIPAA", "SOX"],
+            cost_center="IT-001"
+        )
         
         assert ci.pii is True
         assert ci.compliance_tags == ["GDPR", "HIPAA", "SOX"]
@@ -144,7 +137,7 @@ class TestCI:
             "warranty_end": "2026-12-31"
         }
         
-        ci = CI(
+        ci = create_ci(
             name="High-Performance Server",
             custom_attributes=custom_attrs
         )
@@ -155,7 +148,7 @@ class TestCI:
     
     def test_ci_string_representations(self):
         """Test CI string and repr methods."""
-        ci = CI(
+        ci = create_ci(
             name="Test Server",
             ci_type=CIType.HARDWARE
         )
@@ -175,7 +168,7 @@ class TestCI:
     
     def test_ci_json_serialization(self):
         """Test CI JSON serialization."""
-        ci = CI(
+        ci = create_ci(
             name="API Gateway",
             ci_type=CIType.SERVICE,
             criticality=CriticalityLevel.CRITICAL,
@@ -183,7 +176,7 @@ class TestCI:
         )
         
         # Test JSON export
-        json_data = ci.dict()
+        json_data = ci.model_dump()
         
         assert json_data["name"] == "API Gateway"
         assert json_data["ci_type"] == "SERVICE"
@@ -194,7 +187,7 @@ class TestCI:
     
     def test_ci_inheritance_from_base_asset(self):
         """Test that CI properly inherits from BaseAsset."""
-        ci = CI(name="Test CI")
+        ci = create_ci(name="Test CI")
         
         # Should have all BaseAsset attributes
         assert hasattr(ci, 'created_at')

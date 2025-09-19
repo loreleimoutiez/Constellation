@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Optional, List, Dict, Any
 from datetime import datetime, time
 
-from pydantic import Field, EmailStr
+from pydantic import Field, EmailStr, ConfigDict
 
 from .base import BaseAsset, TimestampMixin
 
@@ -102,13 +102,7 @@ class HumanAsset(BaseAsset):
     # Flexible attributes
     custom_attributes: Dict[str, Any] = Field(default_factory=dict, description="Custom attributes")
     
-    class Config:
-        """Pydantic configuration."""
-        use_enum_values = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat(),
-            time: lambda v: v.isoformat()
-        }
+    model_config = ConfigDict(use_enum_values=True)
     
     def __str__(self) -> str:
         """String representation."""
@@ -138,11 +132,7 @@ class Skill(TimestampMixin):
     certification_id: Optional[str] = Field(None, description="Certification ID or number")
     expires_at: Optional[datetime] = Field(None, description="Certification expiry date")
     
-    class Config:
-        """Pydantic configuration."""
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+    model_config = ConfigDict()
 
 
 class Role(BaseAsset):
@@ -173,9 +163,7 @@ class Role(BaseAsset):
     headcount: int = Field(1, ge=1, description="Number of people in this role")
     is_active: bool = Field(True, description="Whether role is currently active")
     
-    class Config:
-        """Pydantic configuration."""
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
     
     def __str__(self) -> str:
         """String representation."""
@@ -219,9 +207,7 @@ class Team(BaseAsset):
     objectives: List[str] = Field(default_factory=list, description="Team objectives")
     key_metrics: Dict[str, Any] = Field(default_factory=dict, description="Key performance metrics")
     
-    class Config:
-        """Pydantic configuration."""
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
     
     def __str__(self) -> str:
         """String representation."""
@@ -254,12 +240,7 @@ class HumanSkillRelation(TimestampMixin):
     evidence_type: Optional[str] = Field(None, description="Type of evidence (certification, project, etc.)")
     evidence_ref: Optional[str] = Field(None, description="Reference to evidence")
     
-    class Config:
-        """Pydantic configuration."""
-        use_enum_values = True
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
+    model_config = ConfigDict(use_enum_values=True)
     
     def __str__(self) -> str:
         """String representation."""
