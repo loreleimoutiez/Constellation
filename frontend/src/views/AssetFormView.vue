@@ -645,6 +645,7 @@ import { useCMDBStore } from '@/stores/cmdb'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
+import RelationshipManager from '@/components/RelationshipManager.vue'
 import {
   ServerIcon,
   ComputerDesktopIcon,

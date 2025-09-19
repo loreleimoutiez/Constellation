@@ -30,6 +30,11 @@ const router = createRouter({
       component: () => import('../views/AssetFormView.vue'),
     },
     {
+      path: '/assets/:id/edit',
+      name: 'asset-edit',
+      component: () => import('../views/AssetFormView.vue'),
+    },
+    {
       path: '/relations',
       name: 'relations',
       component: () => import('../views/RelationsView.vue'),

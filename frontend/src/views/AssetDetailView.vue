@@ -89,7 +89,7 @@
                       'h-2 w-2 rounded-full',
                       asset.lifecycle_state === 'ACTIVE' ? 'bg-green-500' :
                       asset.lifecycle_state === 'PLANNED' ? 'bg-blue-500' : 
-                      asset.lifecycle_state === 'DEPRECATED' ? 'bg-yellow-500' : 'bg-gray-500'
+                      asset.lifecycle_state === 'DECOMMISSIONED' ? 'bg-yellow-500' : 'bg-gray-500'
                     ]"
                   ></div>
                   <span class="text-sm text-gray-900">{{ asset.lifecycle_state }}</span>
@@ -212,6 +212,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useCMDBStore } from '@/stores/cmdb'
+import type { CI } from '@/services/api'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import {
@@ -233,7 +234,7 @@ const cmdbStore = useCMDBStore()
 // Reactive data
 const loading = ref(false)
 const error = ref<string | null>(null)
-const asset = ref(null)
+const asset = ref<CI | null>(null)
 
 // Computed
 const hasTechnicalDetails = computed(() => {
@@ -319,9 +320,7 @@ const loadAsset = async () => {
 
 const editAsset = () => {
   if (asset.value) {
-    // For now, just show a placeholder
-    alert('Edit functionality will be implemented in the next step!')
-    // router.push(`/assets/${asset.value.id}/edit`)
+    router.push(`/assets/${asset.value.id}/edit`)
   }
 }
 
