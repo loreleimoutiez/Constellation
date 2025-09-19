@@ -599,13 +599,31 @@
             </div>
           </BaseCard>
 
-          <!-- Relations (only show in edit mode) -->
-          <BaseCard v-if="isEditing && route.params.id">
+          <!-- Relations -->
+          <BaseCard>
             <template #header>
-              <h2 class="text-lg font-semibold text-gray-900">Asset Relations</h2>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                  </svg>
+                  <h2 class="text-lg font-semibold text-gray-900">Asset Relations</h2>
+                </div>
+                <span v-if="!isEditing" class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">Creation Mode</span>
+                <span v-else class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">Edit Mode</span>
+              </div>
             </template>
             
-            <RelationshipManager :asset-id="route.params.id as string" />
+            <RelationshipManager 
+              v-if="isEditing && route.params.id"
+              :asset-id="route.params.id as string" 
+            />
+            
+            <RelationshipCreator 
+              v-else
+              v-model="selectedRelationships"
+              :exclude-ci-id="null"
+            />
           </BaseCard>
 
           <!-- Actions -->
@@ -658,6 +676,7 @@ import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import RelationshipManager from '@/components/RelationshipManager.vue'
+import RelationshipCreator from '@/components/RelationshipCreator.vue'
 import {
   ServerIcon,
   ComputerDesktopIcon,
@@ -725,6 +744,13 @@ const form = ref({
     support_level: ''
   }
 })
+
+// Relationships for creation mode
+const selectedRelationships = ref<Array<{
+  target_ci_id: string
+  relationship_type: string
+  description?: string
+}>>([])
 
 // Computed
 const isFormValid = computed(() => {
@@ -961,8 +987,15 @@ const handleSubmit = async () => {
       // Update existing asset
       await cmdbStore.updateCI(route.params.id as string, cleanedForm)
     } else {
-      // Create new asset
-      await cmdbStore.createCI(cleanedForm)
+      // Create new asset with relationships
+      if (selectedRelationships.value.length > 0) {
+        // Use the new endpoint for creating with relationships
+        cleanedForm.relationships = selectedRelationships.value
+        await cmdbStore.createCIWithRelationships(cleanedForm)
+      } else {
+        // Use the regular endpoint for basic creation
+        await cmdbStore.createCI(cleanedForm)
+      }
     }
 
     // Redirect to assets list

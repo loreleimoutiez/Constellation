@@ -161,6 +161,30 @@ class ConstellationAPI {
     return response.data
   }
 
+  async createCIWithRelationships(ciData: Partial<CI> & { 
+    relationships?: Array<{
+      target_ci_id: string
+      relationship_type: string
+      description?: string
+    }> 
+  }): Promise<{
+    ci: CI
+    created_relationships: Array<{
+      target_ci_id: string
+      relationship_type: string
+      description?: string
+    }>
+    failed_relationships: Array<{
+      target_ci_id: string
+      relationship_type: string
+      error: string
+    }>
+    success: boolean
+  }> {
+    const response = await apiClient.post('/api/v1/cis/with-relationships', ciData)
+    return response.data
+  }
+
   async updateCI(id: string, ciData: Partial<CI>): Promise<CI> {
     const response = await apiClient.put(`/api/v1/cis/${id}`, ciData)
     return response.data

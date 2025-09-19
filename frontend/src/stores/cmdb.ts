@@ -69,6 +69,25 @@ export const useCMDBStore = defineStore('cmdb', () => {
     }
   }
 
+  async function createCIWithRelationships(ciData: Partial<CI> & { relationships?: Array<{
+    target_ci_id: string
+    relationship_type: string
+    description?: string
+  }> }) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await api.createCIWithRelationships(ciData)
+      cis.value.push(response.ci)
+      return response
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to create CI with relationships'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function updateCI(id: string, ciData: Partial<CI>) {
     loading.value = true
     error.value = null
@@ -235,6 +254,7 @@ export const useCMDBStore = defineStore('cmdb', () => {
     fetchCIs,
     fetchCI,
     createCI,
+    createCIWithRelationships,
     updateCI,
     deleteCI,
     fetchRelationships,

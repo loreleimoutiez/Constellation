@@ -9,7 +9,9 @@ from pydantic import BaseModel
 
 from ..models.ci import CI, CIType
 from ..models.base import CriticalityLevel, EnvironmentType, LifecycleState
+from ..models.relationships import RelationshipType
 from ..services.ci_service import get_ci_service, CIService
+from ..services.relationship_service import get_relationship_service, RelationshipService
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +20,13 @@ router = APIRouter(prefix="/cis", tags=["Configuration Items"])
 
 
 # Pydantic models for requests/responses
+class RelationshipRequest(BaseModel):
+    """Request model for creating a relationship during CI creation."""
+    target_ci_id: str
+    relationship_type: RelationshipType
+    description: Optional[str] = None
+
+
 class CICreateRequest(BaseModel):
     """Request model for creating a CI."""
     name: str
@@ -36,6 +45,8 @@ class CICreateRequest(BaseModel):
     location: Optional[str] = None
     owner: Optional[str] = None
     custom_attributes: Dict[str, Any] = {}
+    # Nouveau: support des relations
+    relationships: List[RelationshipRequest] = []
 
 
 class CIUpdateRequest(BaseModel):
@@ -69,15 +80,87 @@ class CIListResponse(BaseModel):
 @router.post("/", response_model=CI, status_code=201)
 async def create_ci(
     ci_data: CICreateRequest,
-    ci_service: CIService = Depends(get_ci_service)
+    ci_service: CIService = Depends(get_ci_service),
+    relationship_service: RelationshipService = Depends(get_relationship_service)
 ) -> CI:
-    """Create a new Configuration Item."""
+    """Create a new Configuration Item with optional relationships."""
     try:
-        ci_dict = ci_data.model_dump(exclude_unset=True)
+        # Séparer les relations des données du CI
+        relationships = ci_data.relationships
+        ci_dict = ci_data.model_dump(exclude_unset=True, exclude={"relationships"})
+        
+        # Créer le CI
         ci = await ci_service.create_ci(ci_dict)
+        
+        # Créer les relations si spécifiées
+        if relationships:
+            for rel_data in relationships:
+                try:
+                    await relationship_service.create_relationship(
+                        from_ci_id=ci.id,
+                        to_ci_id=rel_data.target_ci_id,
+                        relationship_type=rel_data.relationship_type,
+                        properties={"description": rel_data.description} if rel_data.description else None
+                    )
+                except Exception as rel_error:
+                    logger.warning(f"Failed to create relationship from {ci.id} to {rel_data.target_ci_id}: {rel_error}")
+                    # Continue creating other relationships even if one fails
+        
         return ci
     except Exception as e:
         logger.error(f"Error creating CI: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create CI: {str(e)}")
+
+
+@router.post("/with-relationships", response_model=Dict[str, Any], status_code=201)
+async def create_ci_with_relationships(
+    ci_data: CICreateRequest,
+    ci_service: CIService = Depends(get_ci_service),
+    relationship_service: RelationshipService = Depends(get_relationship_service)
+) -> Dict[str, Any]:
+    """Create a new Configuration Item with relationships in a single transaction."""
+    created_relationships = []
+    failed_relationships = []
+    
+    try:
+        # Séparer les relations des données du CI
+        relationships = ci_data.relationships
+        ci_dict = ci_data.model_dump(exclude_unset=True, exclude={"relationships"})
+        
+        # Créer le CI
+        ci = await ci_service.create_ci(ci_dict)
+        
+        # Créer les relations si spécifiées
+        if relationships:
+            for rel_data in relationships:
+                try:
+                    relationship = await relationship_service.create_relationship(
+                        from_ci_id=ci.id,
+                        to_ci_id=rel_data.target_ci_id,
+                        relationship_type=rel_data.relationship_type,
+                        properties={"description": rel_data.description} if rel_data.description else None
+                    )
+                    created_relationships.append({
+                        "target_ci_id": rel_data.target_ci_id,
+                        "relationship_type": rel_data.relationship_type.value,
+                        "description": rel_data.description
+                    })
+                except Exception as rel_error:
+                    logger.warning(f"Failed to create relationship from {ci.id} to {rel_data.target_ci_id}: {rel_error}")
+                    failed_relationships.append({
+                        "target_ci_id": rel_data.target_ci_id,
+                        "relationship_type": rel_data.relationship_type.value,
+                        "error": str(rel_error)
+                    })
+        
+        return {
+            "ci": ci.model_dump(),
+            "created_relationships": created_relationships,
+            "failed_relationships": failed_relationships,
+            "success": True
+        }
+    except Exception as e:
+        logger.error(f"Error creating CI with relationships: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to create CI: {str(e)}")
 
 

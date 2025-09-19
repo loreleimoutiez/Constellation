@@ -43,6 +43,10 @@
                 </div>
               </div>
               <div class="flex space-x-3">
+                <BaseButton variant="secondary" @click="runImpactAnalysis">
+                  <ChartBarIcon class="h-5 w-5 mr-2" />
+                  Impact Analysis
+                </BaseButton>
                 <BaseButton variant="secondary" @click="editAsset">
                   <PencilIcon class="h-5 w-5 mr-2" />
                   Edit
@@ -159,28 +163,6 @@
 
         <!-- Sidebar -->
         <div class="space-y-6">
-          <!-- Quick Actions -->
-          <BaseCard>
-            <template #header>
-              <h2 class="text-lg font-semibold text-gray-900">Quick Actions</h2>
-            </template>
-            
-            <div class="space-y-3">
-              <BaseButton variant="secondary" size="sm" class="w-full" @click="viewRelationships">
-                <ShareIcon class="h-4 w-4 mr-2" />
-                View Relationships
-              </BaseButton>
-              <BaseButton variant="secondary" size="sm" class="w-full" @click="runImpactAnalysis">
-                <ChartBarIcon class="h-4 w-4 mr-2" />
-                Impact Analysis
-              </BaseButton>
-              <BaseButton variant="secondary" size="sm" class="w-full" @click="editAsset">
-                <PencilIcon class="h-4 w-4 mr-2" />
-                Edit Asset
-              </BaseButton>
-            </div>
-          </BaseCard>
-
           <!-- Metadata -->
           <BaseCard>
             <template #header>
@@ -219,7 +201,6 @@ import {
   ServerIcon,
   PencilIcon,
   TrashIcon,
-  ShareIcon,
   ChartBarIcon,
   ComputerDesktopIcon,
   CpuChipIcon,
@@ -337,12 +318,10 @@ const deleteAsset = async () => {
   }
 }
 
-const viewRelationships = () => {
-  alert('Relationships view will be implemented in Phase 4!')
-}
-
 const runImpactAnalysis = () => {
-  alert('Impact analysis will be implemented in Phase 4!')
+  if (asset.value) {
+    router.push(`/impact?assetId=${asset.value.id}`)
+  }
 }
 
 // Lifecycle
