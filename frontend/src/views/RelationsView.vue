@@ -226,9 +226,19 @@ const relationships = computed(() => cmdbStore.relationships)
 
 // Normalize relationships to handle both formats (related_ci vs from_ci/to_ci)
 const normalizedRelationships = computed(() => {
-  return relationships.value.map(rel => {
-    // Le type Relationship standard a déjà la structure correcte
-    // Pas besoin de normalisation spéciale pour from_ci/to_ci
+  return relationships.value.map((rel: any) => {
+    // Si c'est le nouveau format avec from_ci/to_ci, normaliser vers related_ci
+    if (rel.from_ci || rel.to_ci) {
+      // Déterminer quel CI est le "related" selon le contexte
+      // Pour la vue générale, on prend to_ci comme related par défaut
+      const related_ci = rel.to_ci || rel.from_ci
+      return {
+        ...rel,
+        related_ci: related_ci,
+        direction: rel.from_ci && rel.to_ci ? 'outgoing' : 'unknown'
+      }
+    }
+    // Sinon, retourner tel quel (format existant)
     return rel
   })
 })
