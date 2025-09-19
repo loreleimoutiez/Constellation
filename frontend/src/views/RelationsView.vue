@@ -227,24 +227,8 @@ const relationships = computed(() => cmdbStore.relationships)
 // Normalize relationships to handle both formats (related_ci vs from_ci/to_ci)
 const normalizedRelationships = computed(() => {
   return relationships.value.map(rel => {
-    // If it already has related_ci, keep it as is
-    if (rel.related_ci) {
-      return rel
-    }
-    
-    // If it has from_ci/to_ci (new format), create a normalized version
-    if (rel.from_ci && rel.to_ci) {
-      return {
-        ...rel,
-        // For display purposes, we'll show both CIs connected
-        related_ci: {
-          id: rel.to_ci.id,
-          name: `${rel.from_ci.name} → ${rel.to_ci.name}`
-        },
-        direction: 'outgoing' // Default direction for all relationships view
-      }
-    }
-    
+    // Le type Relationship standard a déjà la structure correcte
+    // Pas besoin de normalisation spéciale pour from_ci/to_ci
     return rel
   })
 })
@@ -286,8 +270,8 @@ const initializeNetwork = async () => {
       cis.value.map(ci => ({
         id: ci.id,
         label: ci.name,
-        title: `${ci.type}: ${ci.name}\nEnvironment: ${ci.environment}\nStatus: ${ci.status}`,
-        color: getNodeColor(ci.type),
+        title: `${ci.ci_type}: ${ci.name}\nEnvironment: ${ci.environment}\nState: ${ci.lifecycle_state}`,
+        color: getNodeColor(ci.ci_type),
         size: 30,
         font: { size: 12 }
       }))
@@ -355,7 +339,7 @@ const initializeNetwork = async () => {
 }
 
 const getNodeColor = (type: string) => {
-  const colors = {
+  const colors: Record<string, string> = {
     'server': '#3B82F6',
     'database': '#10B981',
     'application': '#8B5CF6',
@@ -367,7 +351,7 @@ const getNodeColor = (type: string) => {
 }
 
 const getEdgeColor = (type: string) => {
-  const colors = {
+  const colors: Record<string, string> = {
     'depends_on': '#EF4444',
     'connects_to': '#3B82F6',
     'hosts': '#10B981',
@@ -465,16 +449,57 @@ const updateLayout = () => {
     // Pour certains changements de layout, il faut complètement recréer le network
     // car Vis.js ne change pas toujours correctement les paramètres
     if (layoutMode.value === 'force' || layoutMode.value === 'hierarchical') {
-      // Sauvegarder les données actuelles
-      const currentData = network.value.body.data
-      
       // Détruire et recréer le network avec les nouvelles options
-      network.value.destroy()
-      network.value = null
+      if (network.value) {
+        network.value.destroy()
+        network.value = null
+      }
       
-      // Recréer avec les bonnes options
+      // Recréer les données du network
+      // Préparer les nœuds (CIs)
+      const nodes = new DataSet(
+        cis.value.map(ci => ({
+          id: ci.id,
+          label: ci.name,
+          title: `${ci.ci_type}: ${ci.name}\nEnvironment: ${ci.environment}\nState: ${ci.lifecycle_state}`,
+          color: getNodeColor(ci.ci_type),
+          font: { size: 14, color: '#333' },
+          borderWidth: 2,
+          size: 25
+        }))
+      )
+
+      // For now, create some dummy relationships since backend might not have them yet
+      const dummyRelations = []
+      if (cis.value.length > 1) {
+        for (let i = 0; i < Math.min(cis.value.length - 1, 5); i++) {
+          dummyRelations.push({
+            id: `rel-${i}`,
+            sourceId: cis.value[i].id,
+            targetId: cis.value[i + 1].id,
+            type: 'depends_on',
+            description: 'Example relationship'
+          })
+        }
+      }
+
+      // Préparer les arêtes (Relations)
+      const edges = new DataSet(
+        dummyRelations.map(rel => ({
+          id: rel.id,
+          from: rel.sourceId,
+          to: rel.targetId,
+          label: rel.type,
+          title: `${rel.type}: ${rel.description || 'No description'}`,
+          arrows: 'to',
+          color: getEdgeColor(rel.type),
+          width: 2
+        }))
+      )
+
+      const data = { nodes, edges }
       const options = getNetworkOptions()
-      network.value = new Network(networkContainer.value, currentData, options)
+      network.value = new Network(networkContainer.value, data, options)
       
       // Remettre les event listeners
       network.value.on('click', (params) => {
@@ -558,8 +583,10 @@ onMounted(() => {
       initializeNetwork()
     } else if (!isDesktop && hasNetwork) {
       // Passer en mode mobile : détruire le réseau
-      network.value.destroy()
-      network.value = null
+      if (network.value) {
+        network.value.destroy()
+        network.value = null
+      }
       networkLoading.value = false
     }
   }

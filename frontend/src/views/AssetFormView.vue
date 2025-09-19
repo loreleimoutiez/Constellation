@@ -363,7 +363,8 @@
                 <BaseInput
                   id="approval_date"
                   v-model="form.policy_attributes.approval_date"
-                  type="date"
+                  type="text"
+                  placeholder="YYYY-MM-DD"
                 />
               </div>
 
@@ -372,7 +373,8 @@
                 <BaseInput
                   id="review_date"
                   v-model="form.policy_attributes.review_date"
-                  type="date"
+                  type="text"
+                  placeholder="YYYY-MM-DD"
                 />
               </div>
             </div>
@@ -453,7 +455,8 @@
                 <BaseInput
                   id="renewal_date"
                   v-model="form.license_attributes.renewal_date"
-                  type="date"
+                  type="text"
+                  placeholder="YYYY-MM-DD"
                 />
               </div>
 
@@ -698,8 +701,8 @@ const form = ref({
     department: '',
     job_title: '',
     manager: '',
-    skills: [],
-    certifications: [],
+    skills: [] as string[],
+    certifications: [] as string[],
     phone: '',
     employee_id: ''
   },
@@ -709,7 +712,7 @@ const form = ref({
     approval_date: '',
     review_date: '',
     owner_department: '',
-    compliance_frameworks: []
+    compliance_frameworks: [] as string[]
   },
   license_attributes: {
     license_type: '',
@@ -853,8 +856,8 @@ const resetForm = () => {
       department: '',
       job_title: '',
       manager: '',
-      skills: [],
-      certifications: [],
+      skills: [] as string[],
+      certifications: [] as string[],
       phone: '',
       employee_id: ''
     },
@@ -864,7 +867,7 @@ const resetForm = () => {
       approval_date: '',
       review_date: '',
       owner_department: '',
-      compliance_frameworks: []
+      compliance_frameworks: [] as string[]
     },
     license_attributes: {
       license_type: '',
@@ -889,7 +892,7 @@ const handleSubmit = async () => {
 
   try {
     // Prepare data based on category
-    let cleanedForm = { ...form.value }
+    let cleanedForm: any = { ...form.value }
     
     // Pour les assets intangibles, on ajuste la structure des données
     if (form.value.category === 'intangible') {
@@ -897,6 +900,10 @@ const handleSubmit = async () => {
       // Le backend utilisera ses valeurs par défaut
       const { environment, lifecycle_state, ...intangibleForm } = cleanedForm
       cleanedForm = intangibleForm
+      
+      // Ajouter environment et lifecycle_state avec des valeurs par défaut pour intangible
+      cleanedForm.environment = 'PROD'  // Valeur par défaut
+      cleanedForm.lifecycle_state = 'ACTIVE'  // Valeur par défaut
       
       // Mapper les types intangibles vers les types backend valides
       const intangibleTypeMapping: Record<string, string> = {
@@ -928,6 +935,11 @@ const handleSubmit = async () => {
         cleanedForm.ci_type = 'GENERIC'
       }
       
+      // Initialiser custom_attributes s'il n'existe pas
+      if (!cleanedForm.custom_attributes) {
+        cleanedForm.custom_attributes = {}
+      }
+      
       // Stocker le type original pour référence future
       cleanedForm.custom_attributes = {
         ...cleanedForm.custom_attributes,
@@ -955,7 +967,7 @@ const handleSubmit = async () => {
 
     // Redirect to assets list
     router.push('/assets')
-  } catch (error) {
+  } catch (error: any) {
     // Debug: Log the full error
     console.error('Asset creation error:', error)
     console.error('Error response:', error.response?.data)

@@ -50,7 +50,7 @@ export function getAssetColor(ci: CI): string {
   }
   
   // Tangible asset colors (existing)
-  const tangibleColors = {
+  const tangibleColors: Record<string, string> = {
     'server': '#3B82F6',
     'database': '#10B981', 
     'application': '#8B5CF6',

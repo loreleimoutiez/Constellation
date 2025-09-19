@@ -225,8 +225,8 @@
                     'h-2 w-2 rounded-full',
                     asset.lifecycle_state === 'ACTIVE' ? 'bg-green-500' :
                     asset.lifecycle_state === 'PLANNED' ? 'bg-blue-500' : 
-                    asset.lifecycle_state === 'DEPRECATED' ? 'bg-yellow-500' : 
-                    asset.lifecycle_state === 'RETIRED' ? 'bg-gray-500' : 'bg-gray-400'
+                    asset.lifecycle_state === 'DECOMMISSIONED' ? 'bg-yellow-500' : 
+                    asset.lifecycle_state === 'INACTIVE' ? 'bg-gray-500' : 'bg-gray-400'
                   ]"
                 ></div>
                 <span class="text-xs font-medium text-gray-700">{{ asset.lifecycle_state }}</span>
@@ -450,7 +450,7 @@ const bulkUpdateStatus = async () => {
         const updateData = {
           name: asset.name,
           ci_type: asset.ci_type,
-          lifecycle_state: bulkLifecycleState.value // This is what we're changing
+          lifecycle_state: bulkLifecycleState.value as 'ACTIVE' | 'INACTIVE' | 'PLANNED' | 'DECOMMISSIONED'
         }
         return cmdbStore.updateCI(assetId, updateData)
       }

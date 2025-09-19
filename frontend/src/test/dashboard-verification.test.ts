@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import api from '@/services/api'
+import type { CI } from '@/services/api'
 
 describe('Dashboard Data Verification', () => {
   it('should verify dashboard can load real data from API', async () => {
@@ -20,10 +21,10 @@ describe('Dashboard Data Verification', () => {
     expect(response.cis.length).toBeGreaterThan(0)
     
     // Count by criticality (what dashboard displays)
-    const critical = response.cis.filter(ci => ci.criticality === 'CRITICAL')
-    const high = response.cis.filter(ci => ci.criticality === 'HIGH')
-    const medium = response.cis.filter(ci => ci.criticality === 'MEDIUM')
-    const low = response.cis.filter(ci => ci.criticality === 'LOW')
+    const critical = response.cis.filter((ci: CI) => ci.criticality === 'CRITICAL')
+    const high = response.cis.filter((ci: CI) => ci.criticality === 'HIGH')
+    const medium = response.cis.filter((ci: CI) => ci.criticality === 'MEDIUM')
+    const low = response.cis.filter((ci: CI) => ci.criticality === 'LOW')
     
     console.log('\n📈 Criticality Breakdown:')
     console.log(`  - Critical: ${critical.length}`)
@@ -35,7 +36,7 @@ describe('Dashboard Data Verification', () => {
     // Show some CI details
     if (response.cis.length > 0) {
       console.log('\n🏷️  Sample CIs:')
-      response.cis.slice(0, 3).forEach((ci, idx) => {
+      response.cis.slice(0, 3).forEach((ci: CI, idx: number) => {
         console.log(`  ${idx + 1}. ${ci.name} (${ci.ci_type}, ${ci.criticality})`)
       })
     }

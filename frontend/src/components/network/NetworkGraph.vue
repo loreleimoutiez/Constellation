@@ -278,7 +278,9 @@ const updateLayout = () => {
     
     // Update positions using moveNode for each node
     Object.entries(positions).forEach(([nodeId, position]) => {
-      network.moveNode(nodeId, position.x, position.y)
+      if (network) {
+        network.moveNode(nodeId, position.x, position.y)
+      }
     })
   }
 }
