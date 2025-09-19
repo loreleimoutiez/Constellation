@@ -6,6 +6,11 @@
 
 ⚠️ Note: Constellation is currently under development and not production-ready.
 
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/11348ad7-0d8d-417e-a4fa-720a6a9916d6" alt="output2" />
+</div>
+
+
 ## Quick Start
 
 **New to Constellation? Get everything running in 3 steps:**
