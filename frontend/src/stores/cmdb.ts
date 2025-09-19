@@ -181,6 +181,20 @@ export const useCMDBStore = defineStore('cmdb', () => {
     }
   }
 
+  async function deleteRelationship(id: string) {
+    loading.value = true
+    error.value = null
+    try {
+      const result = await api.deleteRelationship(id)
+      return result
+    } catch (err) {
+      error.value = err instanceof Error ? err.message : 'Failed to delete relationship'
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function fetchImpactAnalysis(ciId: string, maxDepth: number = 3) {
     loading.value = true
     error.value = null
@@ -260,6 +274,7 @@ export const useCMDBStore = defineStore('cmdb', () => {
     fetchRelationships,
     fetchAllRelationships,
     createRelationship,
+    deleteRelationship,
     fetchImpactAnalysis,
     fetchBusFactorAnalysis,
     fetchGraphStats,

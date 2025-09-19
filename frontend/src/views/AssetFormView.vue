@@ -614,15 +614,12 @@
               </div>
             </template>
             
-            <RelationshipManager 
-              v-if="isEditing && route.params.id"
-              :asset-id="route.params.id as string" 
-            />
-            
             <RelationshipCreator 
-              v-else
               v-model="selectedRelationships"
-              :exclude-ci-id="null"
+              :exclude-ci-id="route.params.id as string || null"
+              :existing-relationships="existingRelationships"
+              :is-edit-mode="isEditing"
+              @remove-existing="handleRemoveExistingRelationship"
             />
           </BaseCard>
 
@@ -750,6 +747,17 @@ const selectedRelationships = ref<Array<{
   target_ci_id: string
   relationship_type: string
   description?: string
+}>>([])
+
+// Existing relationships for edit mode
+const existingRelationships = ref<Array<{
+  id: string
+  relationship_type: string
+  target: {
+    id: string
+    name: string
+    ci_type: string
+  }
 }>>([])
 
 // Computed
@@ -1083,6 +1091,18 @@ const loadAssetForEditing = async () => {
           support_level: asset.license_attributes?.support_level || ''
         }
       }
+      
+      // Load existing relationships for the asset
+      await cmdbStore.fetchRelationships(assetId)
+      existingRelationships.value = cmdbStore.relationships.map(rel => ({
+        id: rel.id,
+        relationship_type: rel.type,
+        target: {
+          id: rel.related_ci.id,
+          name: rel.related_ci.name,
+          ci_type: rel.related_ci.ci_type
+        }
+      }))
     } else {
       // Asset not found
       router.push('/assets')
@@ -1092,6 +1112,38 @@ const loadAssetForEditing = async () => {
     router.push('/assets')
   } finally {
     loading.value = false
+  }
+}
+
+const handleRemoveExistingRelationship = async (relationshipId: string) => {
+  try {
+    await cmdbStore.deleteRelationship(relationshipId)
+    // Reload relationships after deletion
+    if (isEditing.value && route.params.id) {
+      await loadExistingRelationships()
+    }
+  } catch (error) {
+    console.error('Failed to remove relationship:', error)
+    alert('Failed to remove relationship. Please try again.')
+  }
+}
+
+const loadExistingRelationships = async () => {
+  if (!isEditing.value || !route.params.id) return
+  
+  try {
+    const relationships = await cmdbStore.fetchRelationships(route.params.id as string)
+    existingRelationships.value = relationships.map((rel: any) => ({
+      id: rel.id,
+      relationship_type: rel.type,
+      target: {
+        id: rel.related_ci.id,
+        name: rel.related_ci.name,
+        ci_type: rel.related_ci.ci_type
+      }
+    }))
+  } catch (error) {
+    console.error('Failed to load existing relationships:', error)
   }
 }
 

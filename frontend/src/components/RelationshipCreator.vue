@@ -5,11 +5,46 @@
         Asset Relationships
       </p>
       <p class="text-xs text-blue-600 mt-1">
-        Define relationships that will be created when this asset is saved.
+        {{ isEditMode ? 'Manage existing relationships and add new ones.' : 'Define relationships that will be created when this asset is saved.' }}
       </p>
     </div>
     
-    <div v-if="relationships.length === 0" class="text-center py-12 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+    <!-- Existing Relationships (Edit Mode) -->
+    <div v-if="isEditMode && existingRelationships && existingRelationships.length > 0" class="space-y-4">
+      <h4 class="text-sm font-semibold text-gray-700 border-b border-gray-200 pb-2">
+        Current Relationships ({{ existingRelationships.length }})
+      </h4>
+      <div 
+        v-for="relationship in existingRelationships" 
+        :key="relationship.id"
+        class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
+      >
+        <div class="flex justify-between items-start">
+          <div class="flex-1 space-y-2">
+            <div class="flex items-center space-x-2">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                {{ getRelationshipDisplay(relationship.relationship_type) }}
+              </span>
+              <span class="text-xs text-gray-500">Existing</span>
+            </div>
+            <div class="text-sm text-gray-600">
+              <strong>Target:</strong> {{ relationship.target.name }} ({{ relationship.target.ci_type }})
+            </div>
+          </div>
+          <button
+            @click="removeExistingRelationship(relationship.id)"
+            class="ml-4 text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition-colors"
+            title="Remove relationship"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <div v-if="relationships.length === 0 && (!isEditMode || !existingRelationships || existingRelationships.length === 0)" class="text-center py-12 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
       <div class="space-y-2">
         <svg class="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
@@ -19,9 +54,10 @@
       </div>
     </div>
     
-    <div v-else class="space-y-4">
+    <!-- New Relationships (for creation) -->
+    <div v-if="relationships.length > 0" class="space-y-4">
       <h4 class="text-sm font-semibold text-gray-700 border-b border-gray-200 pb-2">
-        Defined Relationships ({{ relationships.length }})
+        {{ isEditMode ? 'New Relationships to Create' : 'Defined Relationships' }} ({{ relationships.length }})
       </h4>
       <div 
         v-for="(relationship, index) in relationships" 
@@ -34,6 +70,7 @@
               <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                 {{ getRelationshipDisplay(relationship.relationship_type) }}
               </span>
+              <span v-if="isEditMode" class="text-xs text-gray-500">New</span>
             </div>
             <div class="text-sm text-gray-600">
               <strong>Target:</strong> {{ getTargetDisplayName(relationship.target_ci_id) }}
@@ -188,10 +225,21 @@ interface RelationshipData {
 interface Props {
   modelValue: RelationshipData[]
   excludeCiId?: string | null
+  existingRelationships?: Array<{
+    id: string
+    relationship_type: string
+    target: {
+      id: string
+      name: string
+      ci_type: string
+    }
+  }>
+  isEditMode?: boolean
 }
 
 interface Emits {
   (e: 'update:modelValue', value: RelationshipData[]): void
+  (e: 'removeExisting', relationshipId: string): void
 }
 
 const props = defineProps<Props>()
@@ -290,6 +338,10 @@ const addRelationship = () => {
 const removeRelationship = (index: number) => {
   const newRels = relationships.value.filter((_, i) => i !== index)
   relationships.value = newRels
+}
+
+const removeExistingRelationship = (relationshipId: string) => {
+  emit('removeExisting', relationshipId)
 }
 
 const cancelAdd = () => {
