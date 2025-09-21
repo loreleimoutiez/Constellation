@@ -435,8 +435,24 @@ const topRiskScore = computed(() => {
 const loadCIs = async () => {
   try {
     loadingCIs.value = true
-    const response = await api.getCIs({ limit: 5000 }) // Augmenté pour récupérer tous les CIs
-    allCIs.value = response.cis || response.items || response || []
+    const allLoadedCIs = []
+    let offset = 0
+    const limit = 1000 // Limite maximale de l'API
+    let hasMore = true
+
+    // Pagination automatique pour récupérer tous les CIs
+    while (hasMore) {
+      const response = await api.getCIs({ limit, offset })
+      const cis = response.cis || response.items || response || []
+      
+      allLoadedCIs.push(...cis)
+      
+      // Si on a récupéré moins que la limite, on a tout récupéré
+      hasMore = cis.length === limit
+      offset += limit
+    }
+    
+    allCIs.value = allLoadedCIs
   } catch (err) {
     error.value = 'Failed to load Configuration Items'
     console.error('Error loading CIs:', err)
