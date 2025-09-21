@@ -34,7 +34,7 @@ make dev
 
 💡 **Want test data?** Run `make sample-data` to populate with 100+ realistic assets and relationships!
 
-💡 **For stable/demo mode:** Use `make start-bg` instead of `make dev`
+💡 **For production/demo mode:** Use `make start-bg` instead of `make dev`
 
 ## Prerequisites
 
@@ -53,7 +53,7 @@ Tip: run `make help` anytime to see all available commands.
 |---------|-------------|
 | `make setup` | **First-time setup** (new developers) |
 | `make dev` | **Start development with hot reload** (containers) |
-| `make start-bg` | **Start in background** (stable/demo mode) |
+| `make start-bg` | **Start in background** (production/demo mode) |
 | `make stop` | **Stop everything** |
 | `make restart` | **Restart all services** |
 | `make check` | **Check status** of all services |

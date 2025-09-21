@@ -128,9 +128,9 @@ setup: ## ESSENTIAL Setup project for first time (new developers)
 	@echo ""
 	@echo "🎉 Setup complete! Your project is ready."
 	@echo "💡 Run 'make dev' for development with hot reload"
-	@echo "💡 Run 'make start-bg' for stable mode"
+	@echo "💡 Run 'make start-bg' for production/demo mode"
 
-start: ## ESSENTIAL Start development (backend + frontend)
+start: ## ESSENTIAL Start development with logs (interactive mode)
 	@echo ""
 	@echo "    ╭─────────────────────────────────────────────────────────────╮"
 	@echo "    │ ✧   ★ ✦      Starting Development Environment       ✦ ★   ✧ │"
@@ -147,7 +147,7 @@ start: ## ESSENTIAL Start development (backend + frontend)
 	@echo "Starting Constellation Development Stack"
 	@echo "======================================="
 	@echo "🚀 Starting all services with Docker..."
-	docker compose up -d
+	docker compose -f docker-compose.yml -f docker-compose.override.yml up -d
 	@echo "⏳ Waiting for services to be ready..."
 	@sleep 10
 	@$(MAKE) check
@@ -160,10 +160,10 @@ start: ## ESSENTIAL Start development (backend + frontend)
 	@echo "💡 Press Ctrl+C to see logs, or 'make logs' in another terminal"
 	docker compose logs -f
 
-start-bg: ## ESSENTIAL Start everything in background
+start-bg: ## ESSENTIAL Start everything in background (production/demo mode)
 	@echo ""
 	@echo "    ╭─────────────────────────────────────────────────────────────╮"
-	@echo "    │ ✧   ★ ✦         Background Development Mode         ✦ ★   ✧ │"
+	@echo "    │ ✧   ★ ✦         Production/Demo Mode                ✦ ★   ✧ │"
 	@echo "    │                                                             │"
 	@echo "    │   ______                 __       ____      __  _           │"
 	@echo "    │  / ____/___  ____  _____/ /____  / / /___ _/ /_(_)___  ____ │"
@@ -174,7 +174,7 @@ start-bg: ## ESSENTIAL Start everything in background
 	@echo "    │ ✦   ✧ ★                                             ★ ✧   ✦ │"
 	@echo "    ╰─────────────────────────────────────────────────────────────╯"
 	@echo ""
-	@echo "Starting Constellation (Background Mode)"
+	@echo "Starting Constellation (Production/Demo Mode)"
 	@echo "======================================="
 	@echo "🚀 Starting all services with Docker..."
 	docker compose up -d
