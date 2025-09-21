@@ -55,6 +55,8 @@ dev: ## ESSENTIAL Start development with hot reload (all in Docker)
 	@echo ""
 	@echo "Starting Development Mode (All in Docker)"
 	@echo "========================================="
+	@echo "🚀 Building development images..."
+	@docker compose -f docker-compose.yml -f docker-compose.override.yml build frontend
 	@echo "🚀 Starting all services with hot reload..."
 	@docker compose -f docker-compose.yml -f docker-compose.override.yml up -d
 	@echo "⏳ Waiting for services to be ready..."
@@ -62,7 +64,7 @@ dev: ## ESSENTIAL Start development with hot reload (all in Docker)
 	@$(MAKE) check-dev
 	@echo ""
 	@echo "🎯 Development URLs:"
-	@echo "   Frontend:  http://localhost:5173 (Hot Reload ✅)"
+	@echo "   Frontend:  http://localhost:5174 (Hot Reload ✅)"
 	@echo "   API Docs:  http://localhost:8000/docs (Auto Reload ✅)"
 	@echo "   Neo4j:     http://localhost:7474"
 	@echo ""
@@ -146,6 +148,8 @@ start: ## ESSENTIAL Start development with logs (interactive mode)
 	@echo ""
 	@echo "Starting Constellation Development Stack"
 	@echo "======================================="
+	@echo "🚀 Building development images..."
+	@docker compose -f docker-compose.yml -f docker-compose.override.yml build frontend
 	@echo "🚀 Starting all services with Docker..."
 	docker compose -f docker-compose.yml -f docker-compose.override.yml up -d
 	@echo "⏳ Waiting for services to be ready..."
@@ -153,7 +157,7 @@ start: ## ESSENTIAL Start development with logs (interactive mode)
 	@$(MAKE) check
 	@echo ""
 	@echo "🎯 Ready! Your URLs:"
-	@echo "   Frontend:  http://localhost:5173"
+	@echo "   Frontend:  http://localhost:5174"
 	@echo "   API Docs:  http://localhost:8000/docs"
 	@echo "   Neo4j:     http://localhost:7474"
 	@echo ""
@@ -208,19 +212,30 @@ check: ## ESSENTIAL Check status of all services
 	@$(MAKE) check-backend
 	@echo ""
 	@echo "Frontend Service:"
-	@if docker ps --filter "name=constellation-frontend" --format "table {{.Names}}\t{{.Status}}" | grep -q "constellation-frontend"; then \
-		echo "✅ Frontend container is running"; \
+	@if docker ps --filter "name=constellation-frontend-dev" --format "table {{.Names}}\t{{.Status}}" | grep -q "constellation-frontend-dev"; then \
+		echo "✅ Frontend dev container is running"; \
+		if curl -s http://localhost:5174 > /dev/null 2>&1; then \
+			echo "✅ Frontend hot reload active at http://localhost:5174"; \
+		else \
+			echo "❌ Frontend dev not responding"; \
+		fi; \
+	elif docker ps --filter "name=constellation-frontend" --format "table {{.Names}}\t{{.Status}}" | grep -q "constellation-frontend"; then \
+		echo "✅ Frontend production container is running"; \
 		if curl -s http://localhost:5173 > /dev/null 2>&1; then \
 			echo "✅ Frontend responding at http://localhost:5173"; \
 		else \
 			echo "❌ Frontend not responding"; \
 		fi; \
 	else \
-		echo "❌ Frontend container is not running"; \
+		echo "❌ No frontend container is running"; \
 	fi
 	@echo ""
 	@echo "🌐 Quick Access:"
-	@echo "   Frontend:  http://localhost:5173"
+	@if docker ps --filter "name=constellation-frontend-dev" --format "table {{.Names}}\t{{.Status}}" | grep -q "constellation-frontend-dev"; then \
+		echo "   Frontend:  http://localhost:5174 (Development Mode)"; \
+	else \
+		echo "   Frontend:  http://localhost:5173"; \
+	fi
 	@echo "   API Docs:  http://localhost:8000/docs"
 	@echo "   Neo4j:     http://localhost:7474"
 

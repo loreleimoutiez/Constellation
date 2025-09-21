@@ -24,7 +24,8 @@ class Settings(BaseModel):
     cors_origins: List[str] = [
         "http://localhost:3000",
         "http://localhost:8080",
-        "http://localhost:5173",  # Vite dev server
+        "http://localhost:5173",  # Vite dev server (production)
+        "http://localhost:5174",  # Vite dev server (development)
     ]
 
     # Security

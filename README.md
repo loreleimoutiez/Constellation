@@ -28,7 +28,7 @@ make dev
 ```
 
 **That's it!** Everything is now running with hot reload:
-- **Frontend:** http://localhost:5173 (Auto-reload ✅)
+- **Frontend:** http://localhost:5174 (Auto-reload ✅)
 - **API Docs:** http://localhost:8000/docs (Auto-reload ✅)
 - **Neo4j Browser:** http://localhost:7474 (neo4j/constellation123)
 
