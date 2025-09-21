@@ -23,16 +23,18 @@ cd Constellation
 # 2. First time setup
 make setup
 
-# 3. Start development environment  
-make start-bg
+# 3. Start development with hot reload
+make dev
 ```
 
-**That's it!** Everything is now running:
-- **Frontend:** http://localhost:5173
-- **API Docs:** http://localhost:8000/docs  
+**That's it!** Everything is now running with hot reload:
+- **Frontend:** http://localhost:5173 (Auto-reload ✅)
+- **API Docs:** http://localhost:8000/docs (Auto-reload ✅)
 - **Neo4j Browser:** http://localhost:7474 (neo4j/constellation123)
 
 💡 **Want test data?** Run `make sample-data` to populate with 100+ realistic assets and relationships!
+
+💡 **For stable/demo mode:** Use `make start-bg` instead of `make dev`
 
 ## Prerequisites
 
@@ -45,17 +47,17 @@ make start-bg
 Tip: run `make help` anytime to see all available commands.
 
 <details>
-<summary>Click to expand commands</summary>
+<summary>Click to expand essential commands</summary>
   
 | Command | Description |
 |---------|-------------|
 | `make setup` | **First-time setup** (new developers) |
-| `make start` | **Start development** (shows frontend logs) |
-| `make start-bg` | **Start in background** (frees terminal) |
+| `make dev` | **Start development with hot reload** (containers) |
+| `make start-bg` | **Start in background** (stable/demo mode) |
 | `make stop` | **Stop everything** |
 | `make restart` | **Restart all services** |
 | `make check` | **Check status** of all services |
-| `make logs` | **View logs** from all services |
+| `make logs` | **View live logs** from all services |
 
 </details>
 <details>

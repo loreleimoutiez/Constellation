@@ -27,12 +27,65 @@ help: ## Show available commands
 	@echo ""
 	@echo "QUICK START:"
 	@echo "  1. First time:     make setup"
-	@echo "  2. Daily work:     make start-bg"
-	@echo "  3. Stop work:      make stop"
-	@echo "  4. Check status:   make check"
+	@echo "  2. Development:    make dev"
+	@echo "  3. Production:     make start-bg"
+	@echo "  4. Stop work:      make stop"
+	@echo "  5. Check status:   make check"
 	@echo ""
-	@echo "TIP: Use 'make start' instead of 'start-bg' if you want to see live logs"
+	@echo "💡 Use 'make dev' for development (auto-reload in containers)"
 	@echo ""
+
+# ============================================================================
+# DEVELOPMENT COMMANDS
+# ============================================================================
+
+dev: ## ESSENTIAL Start development with hot reload (all in Docker)
+	@echo ""
+	@echo "    ╭─────────────────────────────────────────────────────────────╮"
+	@echo "    │ ✧   ★ ✦         Development Mode with Hot Reload    ✦ ★   ✧ │"
+	@echo "    │                                                             │"
+	@echo "    │   ______                 __       ____      __  _           │"
+	@echo "    │  / ____/___  ____  _____/ /____  / / /___ _/ /_(_)___  ____ │"
+	@printf "    │ / /   / __ \\\/ __ \\\/ ___/ __/ _ \\\/ / / __ \`/ __/ / __ \\\/ __ \\\│\n"
+	@echo "    │/ /___/ /_/ / / / (__  ) /_/  __/ / / /_/ / /_/ / /_/ / / / /│"
+	@printf "    │\\\____/\\\____/_/ /_/____/\\\__/\\\___/_/_/\\\__,_/\\\__/_/\\\____/_/ /_/ │\n"
+	@echo "    │                                                             │"
+	@echo "    │ ✦   ✧ ★                                             ★ ✧   ✦ │"
+	@echo "    ╰─────────────────────────────────────────────────────────────╯"
+	@echo ""
+	@echo "Starting Development Mode (All in Docker)"
+	@echo "========================================="
+	@echo "🚀 Starting all services with hot reload..."
+	@docker compose -f docker-compose.yml -f docker-compose.override.yml up -d
+	@echo "⏳ Waiting for services to be ready..."
+	@sleep 15
+	@$(MAKE) check-dev
+	@echo ""
+	@echo "🎯 Development URLs:"
+	@echo "   Frontend:  http://localhost:5173 (Hot Reload ✅)"
+	@echo "   API Docs:  http://localhost:8000/docs (Auto Reload ✅)"
+	@echo "   Neo4j:     http://localhost:7474"
+	@echo ""
+	@echo "✨ Edit your files - changes auto-reload in containers!"
+	@echo "💡 Use 'make logs' to see live logs"
+
+logs: ## Show live logs
+	@docker compose -f docker-compose.yml -f docker-compose.override.yml logs -f
+
+check-dev: ## Check development services
+	@echo "🔍 Development Mode Status"
+	@echo "========================="
+	@if docker ps --filter "name=constellation-frontend-dev" --format "table {{.Names}}\t{{.Status}}" | grep -q "constellation-frontend-dev"; then \
+		echo "✅ Frontend dev container running"; \
+		if curl -s http://localhost:5174 > /dev/null 2>&1; then \
+			echo "✅ Frontend hot reload active at http://localhost:5174"; \
+		else \
+			echo "❌ Frontend not responding"; \
+		fi; \
+	else \
+		echo "❌ Frontend dev container not running"; \
+	fi
+	@$(MAKE) check-backend
 
 # ============================================================================
 # ESSENTIAL COMMANDS - Everything you need for daily development
