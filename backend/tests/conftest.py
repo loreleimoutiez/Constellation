@@ -48,7 +48,7 @@ def sample_human_data():
         "employment_status": "ACTIVE",
         "department": "Engineering",
         "is_manager": False,
-        "on_call_enabled": True
+        "on_call_enabled": True,
     }
 
 
@@ -60,7 +60,7 @@ def sample_team_data():
         "team_type": "DEVOPS",
         "department": "Engineering",
         "primary_location": "San Francisco",
-        "contact_email": "devops@company.com"
+        "contact_email": "devops@company.com",
     }
 
 
@@ -74,7 +74,7 @@ def sample_role_data():
         "department": "Engineering",
         "is_on_call_role": True,
         "responsibilities": ["Development", "Code Review"],
-        "required_skills": ["Python", "FastAPI"]
+        "required_skills": ["Python", "FastAPI"],
     }
 
 
@@ -82,9 +82,12 @@ def sample_role_data():
 def freeze_time(monkeypatch):
     """Freeze time for consistent timestamp testing."""
     frozen_time = datetime(2025, 9, 17, 12, 0, 0)
-    
+
     def mock_utcnow():
         return frozen_time
-    
-    monkeypatch.setattr("app.models.base.datetime", type("MockDateTime", (), {"utcnow": staticmethod(mock_utcnow)}))
+
+    monkeypatch.setattr(
+        "app.models.base.datetime",
+        type("MockDateTime", (), {"utcnow": staticmethod(mock_utcnow)}),
+    )
     return frozen_time

@@ -37,8 +37,7 @@ make start-bg
 ## Prerequisites
 
 - **Docker** and **Docker Compose** installed
-- **Node.js 18+** for frontend development
-- 4GB+ RAM available
+- 4GB+ RAM available  
 - Ports 5173, 7474, 7687, 8000 available
 
 ## Development Commands

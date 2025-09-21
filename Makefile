@@ -2,7 +2,7 @@
 # =========================================
 # Simple commands for development workflow
 
-.PHONY: help setup start start-bg stop restart check logs up-backend check-backend build clean reset db-reset sample-data shell-api shell-neo4j test test-frontend logs-api logs-neo4j logs-live kill-frontend demo
+.PHONY: help setup start start-bg stop restart check logs up-backend check-backend build clean reset db-reset sample-data shell-api shell-neo4j test test-frontend logs-api logs-neo4j logs-live demo
 
 # Default target - show help
 help: ## Show available commands
@@ -59,7 +59,7 @@ setup: ## ESSENTIAL Setup project for first time (new developers)
 	@echo "2. Building Docker containers..."
 	@docker compose build
 	@echo "3. Installing frontend dependencies..."
-	@cd frontend && npm install --legacy-peer-deps --silent
+	@cd frontend && bash -c 'source ~/.nvm/nvm.sh && nvm use 22 && npm install --silent'
 	@echo "4. Starting services for the first time..."
 	@$(MAKE) up-backend
 	@echo "5. Waiting for services to be ready..."
@@ -85,18 +85,19 @@ start: ## ESSENTIAL Start development (backend + frontend)
 	@echo ""
 	@echo "Starting Constellation Development Stack"
 	@echo "======================================="
-	@$(MAKE) up-backend
-	@echo "⏳ Waiting for backend to be ready..."
-	@sleep 3
-	@$(MAKE) check-backend
-	@echo "Starting frontend development server..."
+	@echo "🚀 Starting all services with Docker..."
+	docker compose up -d
+	@echo "⏳ Waiting for services to be ready..."
+	@sleep 10
+	@$(MAKE) check
 	@echo ""
 	@echo "🎯 Ready! Your URLs:"
 	@echo "   Frontend:  http://localhost:5173"
 	@echo "   API Docs:  http://localhost:8000/docs"
 	@echo "   Neo4j:     http://localhost:7474"
 	@echo ""
-	@cd frontend && npm run dev
+	@echo "💡 Press Ctrl+C to see logs, or 'make logs' in another terminal"
+	docker compose logs -f
 
 start-bg: ## ESSENTIAL Start everything in background
 	@echo ""
@@ -114,13 +115,11 @@ start-bg: ## ESSENTIAL Start everything in background
 	@echo ""
 	@echo "Starting Constellation (Background Mode)"
 	@echo "======================================="
-	@$(MAKE) up-backend
-	@echo "⏳ Waiting for backend to be ready..."
-	@sleep 3
-	@$(MAKE) check-backend
-	@echo "🌐 Starting frontend in background..."
-	@cd frontend && npm run dev > /dev/null 2>&1 &
-	@sleep 2
+	@echo "🚀 Starting all services with Docker..."
+	docker compose up -d
+	@echo "⏳ Waiting for services to be ready..."
+	@sleep 10
+	@$(MAKE) check
 	@echo ""
 	@echo "✅ Everything is running in background!"
 	@echo "🎯 Your URLs:"
@@ -133,15 +132,6 @@ start-bg: ## ESSENTIAL Start everything in background
 
 stop: ## ESSENTIAL Stop all services
 	@echo "🛑 Stopping all Constellation services..."
-	@echo "1. Stopping frontend processes..."
-	@echo '#!/bin/bash' > /tmp/stop_frontend.sh
-	@echo 'pkill -f "npm run dev" 2>/dev/null || true' >> /tmp/stop_frontend.sh
-	@echo 'pkill -f "vite" 2>/dev/null || true' >> /tmp/stop_frontend.sh
-	@chmod +x /tmp/stop_frontend.sh
-	@/tmp/stop_frontend.sh
-	@rm -f /tmp/stop_frontend.sh
-	@sleep 1
-	@echo "2. Stopping backend services..."
 	@docker compose down
 	@echo "✅ All services stopped"
 
@@ -157,15 +147,15 @@ check: ## ESSENTIAL Check status of all services
 	@$(MAKE) check-backend
 	@echo ""
 	@echo "Frontend Service:"
-	@if ps aux | grep -v grep | grep -E "(npm run dev|vite)" > /dev/null 2>&1; then \
-		echo "✅ Frontend dev server is running"; \
+	@if docker ps --filter "name=constellation-frontend" --format "table {{.Names}}\t{{.Status}}" | grep -q "constellation-frontend"; then \
+		echo "✅ Frontend container is running"; \
 		if curl -s http://localhost:5173 > /dev/null 2>&1; then \
 			echo "✅ Frontend responding at http://localhost:5173"; \
 		else \
 			echo "❌ Frontend not responding"; \
 		fi; \
 	else \
-		echo "❌ Frontend dev server is not running"; \
+		echo "❌ Frontend container is not running"; \
 	fi
 	@echo ""
 	@echo "🌐 Quick Access:"
@@ -255,7 +245,7 @@ test: ## Run API tests
 
 test-frontend: ## Run frontend tests
 	@echo "🧪 Running frontend tests..."
-	@cd frontend && npm test
+	@cd frontend && bash -c 'source ~/.nvm/nvm.sh && nvm use 22 && npm test'
 
 # Development utilities
 logs-api: ## Show API logs only
@@ -266,12 +256,6 @@ logs-neo4j: ## Show Neo4j logs only
 
 logs-live: ## Show live logs for all services
 	@docker compose logs -f
-
-kill-frontend: ## Force kill frontend processes
-	@echo "🔪 Force killing frontend processes..."
-	@pkill -9 -f "npm run dev" 2>/dev/null || true
-	@pkill -9 -f "vite" 2>/dev/null || true
-	@echo "✅ Frontend processes killed"
 
 # Containers-only mode (for demos/production testing)
 demo: ## Start everything in containers (demo mode)

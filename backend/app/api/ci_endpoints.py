@@ -11,7 +11,10 @@ from ..models.ci import CI, CIType
 from ..models.base import CriticalityLevel, EnvironmentType, LifecycleState
 from ..models.relationships import RelationshipType
 from ..services.ci_service import get_ci_service, CIService
-from ..services.relationship_service import get_relationship_service, RelationshipService
+from ..services.relationship_service import (
+    get_relationship_service,
+    RelationshipService,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +25,7 @@ router = APIRouter(prefix="/cis", tags=["Configuration Items"])
 # Pydantic models for requests/responses
 class RelationshipRequest(BaseModel):
     """Request model for creating a relationship during CI creation."""
+
     target_ci_id: str
     relationship_type: RelationshipType
     description: Optional[str] = None
@@ -29,6 +33,7 @@ class RelationshipRequest(BaseModel):
 
 class CICreateRequest(BaseModel):
     """Request model for creating a CI."""
+
     name: str
     description: Optional[str] = None
     ci_type: CIType = CIType.GENERIC
@@ -51,6 +56,7 @@ class CICreateRequest(BaseModel):
 
 class CIUpdateRequest(BaseModel):
     """Request model for updating a CI."""
+
     name: Optional[str] = None
     description: Optional[str] = None
     ci_type: Optional[CIType] = None
@@ -71,6 +77,7 @@ class CIUpdateRequest(BaseModel):
 
 class CIListResponse(BaseModel):
     """Response model for CI list."""
+
     cis: List[CI]
     total_count: int
     limit: int
@@ -81,17 +88,17 @@ class CIListResponse(BaseModel):
 async def create_ci(
     ci_data: CICreateRequest,
     ci_service: CIService = Depends(get_ci_service),
-    relationship_service: RelationshipService = Depends(get_relationship_service)
+    relationship_service: RelationshipService = Depends(get_relationship_service),
 ) -> CI:
     """Create a new Configuration Item with optional relationships."""
     try:
         # Séparer les relations des données du CI
         relationships = ci_data.relationships
         ci_dict = ci_data.model_dump(exclude_unset=True, exclude={"relationships"})
-        
+
         # Créer le CI
         ci = await ci_service.create_ci(ci_dict)
-        
+
         # Créer les relations si spécifiées
         if relationships:
             for rel_data in relationships:
@@ -100,12 +107,16 @@ async def create_ci(
                         from_ci_id=ci.id,
                         to_ci_id=rel_data.target_ci_id,
                         relationship_type=rel_data.relationship_type,
-                        properties={"description": rel_data.description} if rel_data.description else None
+                        properties={"description": rel_data.description}
+                        if rel_data.description
+                        else None,
                     )
                 except Exception as rel_error:
-                    logger.warning(f"Failed to create relationship from {ci.id} to {rel_data.target_ci_id}: {rel_error}")
+                    logger.warning(
+                        f"Failed to create relationship from {ci.id} to {rel_data.target_ci_id}: {rel_error}"
+                    )
                     # Continue creating other relationships even if one fails
-        
+
         return ci
     except Exception as e:
         logger.error(f"Error creating CI: {e}")
@@ -116,20 +127,20 @@ async def create_ci(
 async def create_ci_with_relationships(
     ci_data: CICreateRequest,
     ci_service: CIService = Depends(get_ci_service),
-    relationship_service: RelationshipService = Depends(get_relationship_service)
+    relationship_service: RelationshipService = Depends(get_relationship_service),
 ) -> Dict[str, Any]:
     """Create a new Configuration Item with relationships in a single transaction."""
     created_relationships = []
     failed_relationships = []
-    
+
     try:
         # Séparer les relations des données du CI
         relationships = ci_data.relationships
         ci_dict = ci_data.model_dump(exclude_unset=True, exclude={"relationships"})
-        
+
         # Créer le CI
         ci = await ci_service.create_ci(ci_dict)
-        
+
         # Créer les relations si spécifiées
         if relationships:
             for rel_data in relationships:
@@ -138,26 +149,34 @@ async def create_ci_with_relationships(
                         from_ci_id=ci.id,
                         to_ci_id=rel_data.target_ci_id,
                         relationship_type=rel_data.relationship_type,
-                        properties={"description": rel_data.description} if rel_data.description else None
+                        properties={"description": rel_data.description}
+                        if rel_data.description
+                        else None,
                     )
-                    created_relationships.append({
-                        "target_ci_id": rel_data.target_ci_id,
-                        "relationship_type": rel_data.relationship_type.value,
-                        "description": rel_data.description
-                    })
+                    created_relationships.append(
+                        {
+                            "target_ci_id": rel_data.target_ci_id,
+                            "relationship_type": rel_data.relationship_type.value,
+                            "description": rel_data.description,
+                        }
+                    )
                 except Exception as rel_error:
-                    logger.warning(f"Failed to create relationship from {ci.id} to {rel_data.target_ci_id}: {rel_error}")
-                    failed_relationships.append({
-                        "target_ci_id": rel_data.target_ci_id,
-                        "relationship_type": rel_data.relationship_type.value,
-                        "error": str(rel_error)
-                    })
-        
+                    logger.warning(
+                        f"Failed to create relationship from {ci.id} to {rel_data.target_ci_id}: {rel_error}"
+                    )
+                    failed_relationships.append(
+                        {
+                            "target_ci_id": rel_data.target_ci_id,
+                            "relationship_type": rel_data.relationship_type.value,
+                            "error": str(rel_error),
+                        }
+                    )
+
         return {
             "ci": ci.model_dump(),
             "created_relationships": created_relationships,
             "failed_relationships": failed_relationships,
-            "success": True
+            "success": True,
         }
     except Exception as e:
         logger.error(f"Error creating CI with relationships: {e}")
@@ -167,11 +186,15 @@ async def create_ci_with_relationships(
 @router.get("/", response_model=CIListResponse)
 async def get_cis(
     ci_type: Optional[CIType] = Query(None, description="Filter by CI type"),
-    environment: Optional[EnvironmentType] = Query(None, description="Filter by environment"),
-    criticality: Optional[CriticalityLevel] = Query(None, description="Filter by criticality"),
+    environment: Optional[EnvironmentType] = Query(
+        None, description="Filter by environment"
+    ),
+    criticality: Optional[CriticalityLevel] = Query(
+        None, description="Filter by criticality"
+    ),
     limit: int = Query(100, ge=1, le=1000, description="Number of CIs to return"),
     offset: int = Query(0, ge=0, description="Number of CIs to skip"),
-    ci_service: CIService = Depends(get_ci_service)
+    ci_service: CIService = Depends(get_ci_service),
 ) -> CIListResponse:
     """Get all Configuration Items with optional filters."""
     try:
@@ -180,16 +203,13 @@ async def get_cis(
             environment=environment,
             criticality=criticality,
             limit=limit,
-            offset=offset
+            offset=offset,
         )
-        
+
         total_count = await ci_service.get_ci_count()
-        
+
         return CIListResponse(
-            cis=cis,
-            total_count=total_count,
-            limit=limit,
-            offset=offset
+            cis=cis, total_count=total_count, limit=limit, offset=offset
         )
     except Exception as e:
         logger.error(f"Error getting CIs: {e}")
@@ -200,7 +220,7 @@ async def get_cis(
 async def search_cis(
     q: str = Query(..., min_length=1, description="Search query"),
     limit: int = Query(50, ge=1, le=100, description="Number of results to return"),
-    ci_service: CIService = Depends(get_ci_service)
+    ci_service: CIService = Depends(get_ci_service),
 ) -> List[CI]:
     """Search Configuration Items by text."""
     try:
@@ -213,7 +233,7 @@ async def search_cis(
 
 @router.get("/count", response_model=Dict[str, int])
 async def get_ci_count(
-    ci_service: CIService = Depends(get_ci_service)
+    ci_service: CIService = Depends(get_ci_service),
 ) -> Dict[str, int]:
     """Get total count of Configuration Items."""
     try:
@@ -225,10 +245,7 @@ async def get_ci_count(
 
 
 @router.get("/{ci_id}", response_model=CI)
-async def get_ci(
-    ci_id: str,
-    ci_service: CIService = Depends(get_ci_service)
-) -> CI:
+async def get_ci(ci_id: str, ci_service: CIService = Depends(get_ci_service)) -> CI:
     """Get a Configuration Item by ID."""
     try:
         ci = await ci_service.get_ci(ci_id)
@@ -246,19 +263,19 @@ async def get_ci(
 async def update_ci(
     ci_id: str,
     update_data: CIUpdateRequest,
-    ci_service: CIService = Depends(get_ci_service)
+    ci_service: CIService = Depends(get_ci_service),
 ) -> CI:
     """Update a Configuration Item."""
     try:
         update_dict = update_data.model_dump(exclude_unset=True, exclude_none=True)
-        
+
         if not update_dict:
             raise HTTPException(status_code=400, detail="No fields provided for update")
-        
+
         ci = await ci_service.update_ci(ci_id, update_dict)
         if not ci:
             raise HTTPException(status_code=404, detail=f"CI not found: {ci_id}")
-        
+
         return ci
     except HTTPException:
         raise
@@ -268,10 +285,7 @@ async def update_ci(
 
 
 @router.delete("/{ci_id}", status_code=204)
-async def delete_ci(
-    ci_id: str,
-    ci_service: CIService = Depends(get_ci_service)
-):
+async def delete_ci(ci_id: str, ci_service: CIService = Depends(get_ci_service)):
     """Delete a Configuration Item."""
     try:
         deleted = await ci_service.delete_ci(ci_id)

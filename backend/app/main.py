@@ -26,16 +26,16 @@ async def lifespan(app: FastAPI):
         neo4j_connection.configure(
             uri=settings.neo4j_uri,
             username=settings.neo4j_username,
-            password=settings.neo4j_password
+            password=settings.neo4j_password,
         )
         await neo4j_connection.connect()
         logger.info("Application startup complete")
     except Exception as e:
         logger.error(f"Failed to start application: {e}")
         raise
-    
+
     yield
-    
+
     # Shutdown
     await neo4j_connection.disconnect()
     logger.info("Application shutdown complete")
@@ -46,7 +46,7 @@ app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
     description="Open-source Configuration Management Database built with Neo4j",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # CORS middleware
@@ -70,7 +70,7 @@ async def root():
     return {
         "message": "Welcome to Constellation",
         "version": settings.app_version,
-        "status": "operational"
+        "status": "operational",
     }
 
 
@@ -83,7 +83,7 @@ async def health_check():
         return {
             "status": "healthy",
             "database": "connected",
-            "version": settings.app_version
+            "version": settings.app_version,
         }
     except Exception as e:
         logger.error(f"Health check failed: {e}")
@@ -101,8 +101,8 @@ async def api_status():
             "health": "/health",
             "root": "/",
             "docs": "/docs",
-            "openapi": "/openapi.json"
-        }
+            "openapi": "/openapi.json",
+        },
     }
 
 
@@ -111,16 +111,20 @@ async def test_database():
     """Test database connectivity and basic operations."""
     try:
         # Test basic query
-        result = await neo4j_connection.execute_query("RETURN 'Neo4j connected!' as message, datetime() as timestamp")
-        
+        result = await neo4j_connection.execute_query(
+            "RETURN 'Neo4j connected!' as message, datetime() as timestamp"
+        )
+
         # Test database version
-        version_result = await neo4j_connection.execute_query("CALL dbms.components() YIELD name, versions RETURN name, versions[0] as version")
-        
+        version_result = await neo4j_connection.execute_query(
+            "CALL dbms.components() YIELD name, versions RETURN name, versions[0] as version"
+        )
+
         return {
             "status": "success",
             "message": result[0]["message"] if result else "Unknown",
             "timestamp": str(result[0]["timestamp"]) if result else "Unknown",
-            "database_info": version_result[0] if version_result else "Unknown"
+            "database_info": version_result[0] if version_result else "Unknown",
         }
     except Exception as e:
         logger.error(f"Database test failed: {e}")
@@ -129,4 +133,5 @@ async def test_database():
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

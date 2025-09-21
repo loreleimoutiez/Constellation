@@ -11,8 +11,15 @@ from typing import Optional, Dict, Any
 from app.models.base import BaseAsset, CriticalityLevel, EnvironmentType, LifecycleState
 from app.models.ci import CI, CIType
 from app.models.human import (
-    HumanAsset, Team, Role, Skill, HumanSkillRelation,
-    EmploymentStatus, RoleType, SkillLevel, TeamType
+    HumanAsset,
+    Team,
+    Role,
+    Skill,
+    HumanSkillRelation,
+    EmploymentStatus,
+    RoleType,
+    SkillLevel,
+    TeamType,
 )
 
 
@@ -27,7 +34,7 @@ def create_base_asset(
     pii: bool = False,
     version: str = "1.0",
     evidence_ref: str = "test-evidence",
-    **kwargs
+    **kwargs,
 ) -> BaseAsset:
     """Create a BaseAsset with sensible defaults."""
     return BaseAsset(
@@ -40,7 +47,7 @@ def create_base_asset(
         pii=pii,
         version=version,
         evidence_ref=evidence_ref,
-        **kwargs
+        **kwargs,
     )
 
 
@@ -69,7 +76,7 @@ def create_ci(
     monitoring_enabled: bool = True,
     backup_enabled: bool = False,
     cost_center: Optional[str] = None,
-    **kwargs
+    **kwargs,
 ) -> CI:
     """Create a CI with sensible defaults."""
     return CI(
@@ -96,7 +103,7 @@ def create_ci(
         monitoring_enabled=monitoring_enabled,
         backup_enabled=backup_enabled,
         cost_center=cost_center,
-        **kwargs
+        **kwargs,
     )
 
 
@@ -129,12 +136,12 @@ def create_human_asset(
     timezone: str = "UTC",
     security_clearance: Optional[str] = None,
     access_level: str = "standard",
-    **kwargs
+    **kwargs,
 ) -> HumanAsset:
     """Create a HumanAsset with sensible defaults."""
     if hire_date is None:
         hire_date = datetime(2020, 1, 1)
-    
+
     return HumanAsset(
         name=name,
         description=description,
@@ -163,7 +170,7 @@ def create_human_asset(
         timezone=timezone,
         security_clearance=security_clearance,
         access_level=access_level,
-        **kwargs
+        **kwargs,
     )
 
 
@@ -189,7 +196,7 @@ def create_team(
     slack_channel: Optional[str] = None,
     budget_code: Optional[str] = None,
     max_size: int = 10,
-    **kwargs
+    **kwargs,
 ) -> Team:
     """Create a Team with sensible defaults."""
     return Team(
@@ -213,7 +220,7 @@ def create_team(
         slack_channel=slack_channel,
         budget_code=budget_code,
         max_size=max_size,
-        **kwargs
+        **kwargs,
     )
 
 
@@ -237,7 +244,7 @@ def create_role(
     requires_security_clearance: bool = False,
     headcount: int = 1,
     is_active: bool = True,
-    **kwargs
+    **kwargs,
 ) -> Role:
     """Create a Role with sensible defaults."""
     return Role(
@@ -259,7 +266,7 @@ def create_role(
         requires_security_clearance=requires_security_clearance,
         headcount=headcount,
         is_active=is_active,
-        **kwargs
+        **kwargs,
     )
 
 
@@ -273,7 +280,7 @@ def create_skill(
     certification_authority: Optional[str] = None,
     certification_id: Optional[str] = None,
     expires_at: Optional[datetime] = None,
-    **kwargs
+    **kwargs,
 ) -> Skill:
     """Create a Skill with sensible defaults."""
     return Skill(
@@ -285,7 +292,7 @@ def create_skill(
         certification_authority=certification_authority,
         certification_id=certification_id,
         expires_at=expires_at,
-        **kwargs
+        **kwargs,
     )
 
 
@@ -300,12 +307,12 @@ def create_human_skill_relation(
     years_experience: float = 1.0,
     evidence_type: str = "self-reported",
     evidence_ref: str = "test-evidence",
-    **kwargs
+    **kwargs,
 ) -> HumanSkillRelation:
     """Create a HumanSkillRelation with sensible defaults."""
     if acquired_at is None:
         acquired_at = datetime(2020, 1, 1)
-    
+
     return HumanSkillRelation(
         human_id=human_id,
         skill_name=skill_name,
@@ -316,15 +323,15 @@ def create_human_skill_relation(
         years_experience=years_experience,
         evidence_type=evidence_type,
         evidence_ref=evidence_ref,
-        **kwargs
+        **kwargs,
     )
 
 
 # Relationship Factory
 def create_relationship(
     source_id: str = "asset-source-123",
-    target_id: str = "asset-target-456", 
-    relationship_type = None,
+    target_id: str = "asset-target-456",
+    relationship_type=None,
     weight: float = 1.0,
     description: str = "Test relationship",
     active: bool = True,
@@ -336,14 +343,14 @@ def create_relationship(
     discovered_by: Optional[str] = None,
     discovered_at: Optional[datetime] = None,
     last_verified: Optional[datetime] = None,
-    **kwargs
+    **kwargs,
 ):
     """Create a Relationship with sensible defaults."""
     from app.models.relationships import Relationship, RelationshipType
-    
+
     if relationship_type is None:
         relationship_type = RelationshipType.DEPENDS_ON
-    
+
     return Relationship(
         source_id=source_id,
         target_id=target_id,
@@ -359,5 +366,5 @@ def create_relationship(
         discovered_by=discovered_by,
         discovered_at=discovered_at,
         last_verified=last_verified,
-        **kwargs
+        **kwargs,
     )
