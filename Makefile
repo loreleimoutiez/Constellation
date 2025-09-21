@@ -216,15 +216,6 @@ check: ## ESSENTIAL Check status of all services
 	@echo "   API Docs:  http://localhost:8000/docs"
 	@echo "   Neo4j:     http://localhost:7474"
 
-logs: ## ESSENTIAL View logs from all services
-	@echo "📋 Constellation Logs"
-	@echo "===================="
-	@echo "Backend logs:"
-	@docker compose logs --tail=20 api neo4j
-	@echo ""
-	@echo "💡 For live logs: docker compose logs -f"
-	@echo "💡 Frontend logs: check terminal where you ran 'make start'"
-
 # ============================================================================
 # ADVANCED COMMANDS - For specific needs and troubleshooting
 # ============================================================================
