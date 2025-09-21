@@ -109,18 +109,26 @@ setup: ## ESSENTIAL Setup project for first time (new developers)
 	@echo "=============================================="
 	@echo "1. Creating environment file..."
 	@cp .env.example .env 2>/dev/null || echo "   ✅ .env already exists"
-	@echo "2. Building Docker containers..."
+	@echo "2. Creating development configuration..."
+	@if [ ! -f docker-compose.override.yml ]; then \
+		echo "   Creating docker-compose.override.yml for development..."; \
+		printf "version: '3.8'\n\nservices:\n  # Frontend en mode développement avec hot reload\n  frontend:\n    build:\n      context: ./frontend\n      dockerfile: Dockerfile.dev\n    container_name: constellation-frontend-dev\n    ports:\n      - \"5174:5173\"\n    environment:\n      - VITE_API_BASE_URL=http://localhost:8000/api/v1\n      - VITE_NEO4J_BROWSER_URL=http://localhost:7474\n    volumes:\n      - ./frontend:/app\n      - /app/node_modules\n    restart: unless-stopped\n\n  # Backend en mode développement avec auto-reload\n  api:\n    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload\n" > docker-compose.override.yml; \
+	else \
+		echo "   ✅ docker-compose.override.yml already exists"; \
+	fi
+	@echo "3. Building Docker containers..."
 	@docker compose build
-	@echo "3. Installing frontend dependencies..."
+	@echo "4. Installing frontend dependencies..."
 	@cd frontend && bash -c 'source ~/.nvm/nvm.sh && nvm use 22 && npm install --silent'
-	@echo "4. Starting services for the first time..."
+	@echo "5. Starting services for the first time..."
 	@$(MAKE) up-backend
-	@echo "5. Waiting for services to be ready..."
+	@echo "6. Waiting for services to be ready..."
 	@sleep 5
 	@$(MAKE) check-backend
 	@echo ""
 	@echo "🎉 Setup complete! Your project is ready."
-	@echo "💡 Run 'make start' to begin development"
+	@echo "💡 Run 'make dev' for development with hot reload"
+	@echo "💡 Run 'make start-bg' for stable mode"
 
 start: ## ESSENTIAL Start development (backend + frontend)
 	@echo ""
